@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile with explicit port exposure
+# Multi-stage Dockerfile with explicit port exposure and debug mode
 FROM maven:3.8.4-openjdk-17-slim AS build
 WORKDIR /app
 
@@ -20,5 +20,11 @@ COPY --from=build /app/target/*.jar app.jar
 # Expose the port Render expects
 EXPOSE 10000
 
-# Run with explicit port binding
-ENTRYPOINT ["java", "-jar", "-Dserver.port=${PORT:-10000}", "-Dserver.address=0.0.0.0", "app.jar"]
+# Run with maximum debug logging
+ENTRYPOINT ["java", "-jar", \
+    "-Dserver.port=${PORT:-10000}", \
+    "-Dserver.address=0.0.0.0", \
+    "-Dlogging.level.root=DEBUG", \
+    "-Dlogging.level.com.lms=DEBUG", \
+    "-Dlogging.level.org.hibernate=DEBUG", \
+    "app.jar"]
