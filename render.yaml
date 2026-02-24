@@ -1,0 +1,63 @@
+# ===========================================
+# render.yaml - Render Deployment Configuration
+# ===========================================
+# Place this file in the ROOT of your repository
+
+services:
+  - type: web
+    name: lms-application
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /
+    envVars:
+      # Active Spring Profile - CRITICAL: must be "prod"
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      # Port - Render sets this automatically
+      - key: PORT
+        value: 10000
+
+      # Database - Use Render's internal DATABASE_URL
+      # Render auto-injects DATABASE_URL when you link a PostgreSQL database
+      # Format from Render: postgresql://user:pass@host:port/dbname
+      # Our app converts it to: jdbc:postgresql://user:pass@host:port/dbname
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lms-postgres-db
+          property: connectionString
+
+      # JWT Secret - set a long random string in Render dashboard
+      - key: JWT_SECRET
+        value: YourVeryLongAndSecureJWTSecretKeyHere1234567890AbcDefGhiJklMnoPqrStu
+
+      # Cloudinary - set these in Render dashboard
+      - key: CLOUDINARY_CLOUD_NAME
+        value: your_cloudinary_cloud_name
+
+      - key: CLOUDINARY_API_KEY
+        value: your_cloudinary_api_key
+
+      - key: CLOUDINARY_API_SECRET
+        value: your_cloudinary_api_secret
+
+      # PayPal - set these in Render dashboard
+      - key: PAYPAL_CLIENT_ID
+        value: your_paypal_client_id
+
+      - key: PAYPAL_CLIENT_SECRET
+        value: your_paypal_client_secret
+
+      - key: PAYPAL_MODE
+        value: sandbox
+
+      # CORS - update with your actual frontend URL
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://lms-application.onrender.com
+
+databases:
+  - name: lms-postgres-db
+    databaseName: lmsdb
+    user: lms_user
+    plan: free
