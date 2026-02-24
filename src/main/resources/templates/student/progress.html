@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Learning Progress - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .progress-ring {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .lesson-item {
+            transition: all 0.2s ease;
+        }
+        .lesson-item:hover {
+            transform: translateX(4px);
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- Navigation -->
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <a th:href="@{/}" class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">LearnPro</span>
+                </a>
+            </div>
+
+            <div class="flex items-center space-x-6">
+                <a th:href="@{/courses}" class="text-gray-600 hover:text-blue-600">Browse Courses</a>
+                <a th:href="@{/student}" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                <a th:href="@{/student/progress}" class="text-blue-600 hover:text-blue-800 font-medium">My Progress</a>
+                <a th:href="@{/student/my-courses}" class="text-gray-600 hover:text-blue-600">My Courses</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="relative group">
+                    <button class="flex items-center space-x-2 text-gray-600 hover:text-blue-600">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                            <span th:text="${user.username.substring(0, 1).toUpperCase()}">U</span>
+                        </div>
+                        <span th:text="${user.username}">Student</span>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 hidden group-hover:block z-50">
+                        <a th:href="@{/profile}" class="block px-4 py-2 text-gray-800 hover:bg-blue-50">Profile</a>
+                        <a th:href="@{/auth/logout}" class="block px-4 py-2 text-gray-800 hover:bg-blue-50">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">My Learning Progress</h1>
+                <p class="text-gray-600 mt-2">Track your progress across all enrolled courses</p>
+            </div>
+            <a th:href="@{/student}"
+               class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <span th:text="${error}"></span>
+    </div>
+
+    <!-- Progress Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <i class="fas fa-book-open text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-600">Enrolled Courses</p>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${enrollments.size()}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-600">Completed Courses</p>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${completedCount}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div class="flex items-center">
+                <div class="p-3 bg-yellow-100 rounded-lg">
+                    <i class="fas fa-play-circle text-yellow-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-600">In Progress</p>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${inProgressCount}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-600">Average Progress</p>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${avgProgress} + '%'">0%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Progress per Course -->
+    <div th:if="${!enrollments.empty}" class="space-y-6">
+        <div th:each="wrapper : ${enrollments}" class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+            <!-- Course Header -->
+            <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2" th:text="${wrapper.course.title}"></h2>
+                        <div class="flex items-center space-x-4 text-sm text-gray-600">
+                            <span>
+                                <i class="fas fa-chalkboard-teacher mr-1"></i>
+                                <span th:text="${wrapper.course.instructor.username}"></span>
+                            </span>
+                            <span>
+                                <i class="fas fa-calendar mr-1"></i>
+                                Enrolled: <span th:text="${#temporals.format(wrapper.enrolledAt, 'MMM dd, yyyy')}"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span th:text="${wrapper.progress} + '% Complete'"
+                              th:class="${wrapper.progress >= 100} ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                                       + ' px-4 py-2 rounded-full text-sm font-semibold'">
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar and Stats -->
+            <div class="p-6 bg-gray-50 border-b border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Overall Progress -->
+                    <div>
+                        <p class="text-sm text-gray-600 mb-2">Overall Progress</p>
+                        <div class="flex items-center">
+                            <div class="flex-1 bg-gray-200 rounded-full h-3 mr-3">
+                                <div class="bg-blue-600 h-3 rounded-full transition-all duration-500"
+                                     th:style="'width: ' + ${wrapper.progress} + '%'"></div>
+                            </div>
+                            <span class="text-lg font-bold text-blue-600" th:text="${wrapper.progress} + '%'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Lessons Completed -->
+                    <div>
+                        <p class="text-sm text-gray-600 mb-2">
+                            <i class="fas fa-check-circle text-green-500 mr-1"></i>Lessons Completed
+                        </p>
+                        <p class="text-2xl font-bold text-gray-900">
+                            <span th:text="${wrapper.completedLessons}"></span>/<span th:text="${wrapper.totalLessons}"></span>
+                        </p>
+                    </div>
+
+                    <!-- Quizzes Passed -->
+                    <div>
+                        <p class="text-sm text-gray-600 mb-2">
+                            <i class="fas fa-trophy text-yellow-500 mr-1"></i>Quizzes Passed
+                        </p>
+                        <p class="text-2xl font-bold text-gray-900">
+                            <span th:text="${wrapper.passedQuizzes}"></span>/<span th:text="${wrapper.totalQuizzes}"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lessons Breakdown -->
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-list mr-2 text-blue-600"></i>Lesson Progress
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div th:each="lesson : ${wrapper.course.lessons}"
+                         class="lesson-item p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1">
+                                <!-- Lesson Type Icon -->
+                                <th:block th:switch="${lesson.type}">
+                                    <i th:case="'VIDEO'" class="fas fa-video text-blue-500 w-6"></i>
+                                    <i th:case="'PDF'" class="fas fa-file-pdf text-red-500 w-6"></i>
+                                    <i th:case="'IMAGE'" class="fas fa-image text-green-500 w-6"></i>
+                                    <i th:case="'TEXT'" class="fas fa-file-alt text-gray-500 w-6"></i>
+                                    <i th:case="'QUIZ'" class="fas fa-question-circle text-purple-500 w-6"></i>
+                                </th:block>
+
+                                <div class="ml-3 flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-gray-900" th:text="${lesson.title}"></span>
+                                        <span class="text-xs text-gray-500 ml-2" th:text="${lesson.duration} + ' min'"></span>
+                                    </div>
+                                    <div class="flex items-center mt-1">
+                                        <!-- Completion Status -->
+                                        <th:block th:with="progress=${lessonProgress[wrapper.course.id + '_' + lesson.id]}">
+                                            <th:block th:if="${progress != null and progress.completed}">
+                                                <i class="fas fa-check-circle text-green-500 text-xs mr-1"></i>
+                                                <span class="text-xs text-green-600">Completed</span>
+                                            </th:block>
+                                            <th:block th:unless="${progress != null and progress.completed}">
+                                                <i class="far fa-circle text-gray-300 text-xs mr-1"></i>
+                                                <span class="text-xs text-gray-500">Not Started</span>
+                                            </th:block>
+                                        </th:block>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Continue Button -->
+                            <a th:href="@{/courses/{id}(id=${wrapper.course.id}, lesson=${lesson.id})}"
+                               class="ml-4 text-blue-600 hover:text-blue-800 text-sm whitespace-nowrap">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Performance -->
+            <div th:if="${wrapper.quizAttempts != null and !wrapper.quizAttempts.empty}"
+                 class="p-6 border-t border-gray-200 bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-chart-bar mr-2 text-purple-600"></i>Quiz Performance
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div th:each="attempt : ${wrapper.quizAttempts}"
+                         class="bg-white p-3 rounded-lg border border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-medium text-gray-900" th:text="${attempt.quiz.title}"></p>
+                                <p class="text-sm text-gray-500">
+                                    Attempt #<span th:text="${attempt.attemptNumber}"></span> -
+                                    <span th:text="${#temporals.format(attempt.completedAt, 'MMM dd')}"></span>
+                                </p>
+                            </div>
+                            <span th:text="${attempt.percentage} + '%'"
+                                  th:class="${attempt.status == 'passed'} ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                           + ' px-3 py-1 rounded-full text-sm font-medium'">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="p-6 border-t border-gray-200 bg-white flex justify-between items-center">
+                <a th:href="@{/courses/{id}(id=${wrapper.course.id})}"
+                   class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-play mr-2"></i>Continue Learning
+                </a>
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-clock mr-1"></i>
+                    Last accessed: <span th:text="${#temporals.format(wrapper.lastAccessed, 'MMM dd, yyyy HH:mm')}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${enrollments.empty}" class="text-center py-16 bg-white rounded-xl shadow-lg">
+        <div class="inline-block p-6 bg-blue-50 rounded-full mb-6">
+            <i class="fas fa-graduation-cap text-blue-400 text-6xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">No Courses Yet</h2>
+        <p class="text-gray-600 max-w-md mx-auto mb-6">
+            You haven't enrolled in any courses yet. Start your learning journey today!
+        </p>
+        <a th:href="@{/courses}"
+           class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold inline-flex items-center">
+            <i class="fas fa-search mr-2"></i>Browse Courses
+        </a>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-800 text-white py-8 mt-12">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <p>&copy; 2024 Learning Management System. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dropdown functionality
+        document.querySelectorAll('.group').forEach(group => {
+            group.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const menu = this.querySelector('.hidden');
+                if (menu) {
+                    menu.classList.toggle('hidden');
+                }
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.group')) {
+                document.querySelectorAll('.group .hidden').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        });
+
+        // Auto-dismiss flash messages
+        setTimeout(() => {
+            document.querySelectorAll('.bg-green-100, .bg-red-100').forEach(msg => {
+                msg.style.transition = 'opacity 0.5s';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 500);
+            });
+        }, 5000);
+    });
+</script>
+</body>
+</html>

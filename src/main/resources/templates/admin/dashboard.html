@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- Navigation -->
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <a href="/" class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">LearnPro</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a href="/courses" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a href="/dashboard" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                <a href="/admin" class="text-gray-600 hover:text-blue-600">Admin</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/auth/logout" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p class="text-gray-600 mt-2">Manage your learning platform</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Total Users</h3>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${stats.totalUsers}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <i class="fas fa-book text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Total Courses</h3>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${stats.totalCourses}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Total Revenue</h3>
+                    <p class="text-2xl font-bold text-gray-900"
+                       th:text="${stats.totalRevenue != null ? '$' + stats.totalRevenue : '$0'}">$0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-yellow-100 rounded-lg">
+                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Pending Approvals</h3>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${stats.pendingCourses}">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="border-b border-gray-200">
+            <div class="flex">
+                <!-- Users Tab -->
+                <a href="/admin?tab=users"
+                   class="py-4 px-6 font-medium text-sm"
+                   th:classappend="${activeTab == 'users'} ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'">
+                    Users
+                </a>
+
+                <!-- All Courses Tab -->
+                <a href="/admin?tab=courses"
+                   class="py-4 px-6 font-medium text-sm"
+                   th:classappend="${activeTab == 'courses'} ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'">
+                    All Courses
+                </a>
+
+                <!-- Pending Approval Tab -->
+                <a href="/admin?tab=pending"
+                   class="py-4 px-6 font-medium text-sm"
+                   th:classappend="${activeTab == 'pending'} ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'">
+                    <i class="fas fa-clock mr-1"></i>Pending Approval
+                    <span th:if="${stats.pendingCourses > 0}"
+                          class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1"
+                          th:text="${stats.pendingCourses}"></span>
+                </a>
+
+                <!-- Lessons Tab -->
+                <a href="/admin?tab=lessons"
+                   class="py-4 px-6 font-medium text-sm"
+                   th:classappend="${activeTab == 'lessons'} ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'">
+                    <i class="fas fa-book-open mr-1"></i>Lessons
+                    <span class="ml-2 bg-gray-500 text-white text-xs rounded-full px-2 py-1"
+                          th:text="${stats.totalLessons}"></span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded m-4">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded m-4">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Users Tab Content -->
+        <div th:id="users-content" th:if="${activeTab == 'users'}" class="p-6">
+            <!-- Search Bar -->
+            <div class="mb-6">
+                <form action="/admin" method="get" class="flex gap-4">
+                    <input type="hidden" name="tab" value="users">
+                    <div class="flex-1 relative">
+                        <input type="text" name="search"
+                               th:value="${searchTerm}"
+                               placeholder="Search users by username or email..."
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        Search
+                    </button>
+                    <a href="/admin?tab=users" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">
+                        Clear
+                    </a>
+                </form>
+            </div>
+
+            <!-- Users Table -->
+            <div class="overflow-x-auto bg-white rounded-lg shadow">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            User
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Role
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Joined
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tr th:each="user : ${users}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold mr-3">
+                                    <span th:text="${user.username.substring(0, 1).toUpperCase()}"></span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900" th:text="${user.username}"></div>
+                                    <div class="text-sm text-gray-500" th:text="${user.email}"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                                <span th:text="${user.role}"
+                                      th:class="${user.role == 'ADMIN' ? 'bg-purple-100 text-purple-800' :
+                                                 user.role == 'INSTRUCTOR' ? 'bg-blue-100 text-blue-800' :
+                                                 'bg-green-100 text-green-800'}
+                                               + ' px-2 inline-flex text-xs leading-5 font-semibold rounded-full'">
+                                </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                                <span th:if="${user.enabled}"
+                                      class="bg-green-100 text-green-800 px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                    <i class="fas fa-check-circle mr-1"></i> Active
+                                </span>
+                            <span th:unless="${user.enabled}"
+                                  class="bg-red-100 text-red-800 px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                    <i class="fas fa-times-circle mr-1"></i> Disabled
+                                </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                            th:text="${#temporals.format(user.createdAt, 'MMM dd, yyyy')}">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <!-- Edit Button -->
+                                <a th:href="@{/admin/users/{id}/edit(id=${user.id})}"
+                                   class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded hover:bg-blue-50"
+                                   title="Edit User">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                <!-- Toggle Status Button -->
+                                <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}"
+                                      method="post" class="inline">
+                                    <button type="submit"
+                                            th:title="${user.enabled ? 'Disable User' : 'Enable User'}"
+                                            class="text-yellow-600 hover:text-yellow-900 px-2 py-1 rounded hover:bg-yellow-50">
+                                        <i th:if="${user.enabled}" class="fas fa-ban"></i>
+                                        <i th:unless="${user.enabled}" class="fas fa-check"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Delete Button -->
+                                <form th:action="@{/admin/users/{id}/delete(id=${user.id})}"
+                                      method="post" class="inline"
+                                      onsubmit="return confirm('Delete user \'' + '${user.username}' + '\'?')">
+                                    <button type="submit"
+                                            class="text-red-600 hover:text-red-900 px-2 py-1 rounded hover:bg-red-50"
+                                            title="Delete User">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <!-- Empty State -->
+                <div th:if="${users.empty}" class="text-center py-12">
+                    <i class="fas fa-users text-gray-400 text-6xl mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">No users found</h3>
+                    <p class="text-gray-600" th:if="${searchTerm}">
+                        No users match your search for "<span th:text="${searchTerm}"></span>"
+                    </p>
+                    <p class="text-gray-600" th:unless="${searchTerm}">
+                        No users in the system yet
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Courses Tab Content -->
+        <div th:id="courses-content" th:if="${activeTab == 'courses'}" class="p-6">
+            <!-- Search Bar -->
+            <div class="mb-6">
+                <form action="/admin" method="get" class="flex gap-4">
+                    <input type="hidden" name="tab" value="courses">
+                    <div class="flex-1 relative">
+                        <input type="text" name="courseSearch"
+                               th:value="${courseSearchTerm}"
+                               placeholder="Search courses by title or description..."
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        Search
+                    </button>
+                    <a href="/admin?tab=courses" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">
+                        Clear
+                    </a>
+                </form>
+            </div>
+
+            <!-- Courses Table -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                    <tr>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Course
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Instructor
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Price
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Created
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tr th:each="course : ${allCourses}">
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900" th:text="${course.title}"></div>
+                            <div class="text-xs text-gray-500 truncate max-w-xs" th:text="${course.description}"></div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-semibold mr-2">
+                                    <span th:text="${course.instructor.username.substring(0, 1).toUpperCase()}"></span>
+                                </div>
+                                <span th:text="${course.instructor.username}"></span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold"
+                            th:text="'$' + ${course.price}"></td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span th:text="${course.status}"
+                                  th:class="${course.status == 'APPROVED' ? 'bg-green-100 text-green-800' :
+                                             course.status == 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                             'bg-red-100 text-red-800'}
+                                           + ' px-2 inline-flex text-xs leading-5 font-semibold rounded-full'">
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                            th:text="${#temporals.format(course.createdAt, 'MMM dd, yyyy')}">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <!-- View Button -->
+                                <a th:href="@{/courses/{id}(id=${course.id})}"
+                                   class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded hover:bg-blue-50"
+                                   title="View Course">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+
+                                <!-- Approve/Reject for PENDING courses -->
+                                <th:block th:if="${course.status == 'PENDING'}">
+                                    <form th:action="@{/admin/courses/{id}/approve(id=${course.id})}"
+                                          method="post" class="inline">
+                                        <button type="submit"
+                                                class="text-green-600 hover:text-green-900 px-2 py-1 rounded hover:bg-green-50"
+                                                title="Approve Course"
+                                                onclick="return confirm('Approve this course?')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/admin/courses/{id}/reject(id=${course.id})}"
+                                          method="post" class="inline">
+                                        <button type="submit"
+                                                class="text-red-600 hover:text-red-900 px-2 py-1 rounded hover:bg-red-50"
+                                                title="Reject Course"
+                                                onclick="return confirm('Reject this course?')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                </th:block>
+
+                                <!-- Delete Button -->
+                                <form th:action="@{/admin/courses/{id}/delete(id=${course.id}, fromTab='courses')}"
+                                      method="post" class="inline">
+                                    <button type="submit"
+                                            class="text-red-600 hover:text-red-900 px-2 py-1 rounded hover:bg-red-50"
+                                            title="Delete Course"
+                                            onclick="return confirm('Delete course: \'' + '${course.title}' + '\'?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <!-- Empty State -->
+                <div th:if="${allCourses.empty}" class="text-center py-12">
+                    <i class="fas fa-book-open text-gray-400 text-6xl mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">No courses found</h3>
+                    <p class="text-gray-600" th:if="${courseSearchTerm}">
+                        No courses match your search for "<span th:text="${courseSearchTerm}"></span>"
+                    </p>
+                    <p class="text-gray-600" th:unless="${courseSearchTerm}">
+                        No courses in the system yet
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Approval Tab Content -->
+        <div th:id="pending-content" th:if="${activeTab == 'pending'}" class="p-6">
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900">Pending Course Approvals</h3>
+                <p class="text-gray-600">Review and approve courses created by instructors</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div th:each="course : ${pendingCourses}"
+                     class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="p-6">
+                        <!-- Course Header -->
+                        <div class="flex justify-between items-start mb-4">
+                            <h4 class="font-semibold text-gray-900 text-lg" th:text="${course.title}"></h4>
+                            <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium">
+                                PENDING
+                            </span>
+                        </div>
+
+                        <!-- Instructor Info -->
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-semibold mr-2">
+                                <span th:text="${course.instructor.username.substring(0, 1).toUpperCase()}"></span>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600" th:text="${course.instructor.username}"></p>
+                                <p class="text-xs text-gray-500" th:text="${course.instructor.email}"></p>
+                            </div>
+                        </div>
+
+                        <!-- Course Description -->
+                        <p class="text-sm text-gray-600 mb-4 line-clamp-3" th:text="${course.description}"></p>
+
+                        <!-- Course Details -->
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-lg font-bold text-gray-900" th:text="'$' + ${course.price}"></span>
+                            <span class="text-sm text-gray-500"
+                                  th:text="${course.lessons != null ? course.lessons.size() : 0} + ' lessons'"></span>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex space-x-2">
+                            <form th:action="@{/admin/courses/{id}/approve(id=${course.id})}"
+                                  method="post" class="flex-1">
+                                <button type="submit"
+                                        class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium"
+                                        onclick="return confirm('Approve this course?')">
+                                    <i class="fas fa-check mr-1"></i>Approve
+                                </button>
+                            </form>
+
+                            <form th:action="@{/admin/courses/{id}/reject(id=${course.id})}"
+                                  method="post" class="flex-1">
+                                <button type="submit"
+                                        class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm font-medium"
+                                        onclick="return confirm('Reject this course?')">
+                                    <i class="fas fa-times mr-1"></i>Reject
+                                </button>
+                            </form>
+
+                            <form th:action="@{/admin/courses/{id}/delete(id=${course.id}, fromTab='pending')}"
+                                  method="post" class="flex-1">
+                                <button type="submit"
+                                        class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm font-medium"
+                                        onclick="return confirm('Delete this course?')">
+                                    <i class="fas fa-trash mr-1"></i>Delete
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <a th:href="@{/courses/{id}(id=${course.id})}"
+                               class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+                                <i class="fas fa-external-link-alt mr-1"></i>Preview Course
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State for Pending -->
+            <div th:if="${pendingCourses.empty}" class="text-center py-12">
+                <i class="fas fa-check-circle text-gray-400 text-6xl mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No pending approvals</h3>
+                <p class="text-gray-600">All courses have been reviewed and approved.</p>
+                <p class="text-sm text-gray-500 mt-2">New courses created by instructors will appear here.</p>
+            </div>
+        </div>
+
+        <!-- Lessons Tab Content -->
+        <div th:id="lessons-content" th:if="${activeTab == 'lessons'}" class="p-6">
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900">All Lessons</h3>
+                <p class="text-gray-600">Manage all lessons across all courses</p>
+            </div>
+
+            <!-- Lessons Table -->
+            <div class="overflow-x-auto bg-white rounded-lg shadow">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Lesson
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Course
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Type
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Duration
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Created
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tr th:each="lesson : ${allLessons}">
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900" th:text="${lesson.title}"></div>
+                            <div class="text-xs text-gray-500 truncate max-w-xs" th:text="${lesson.description}"></div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a th:href="@{/admin/courses/{id}(id=${lesson.course.id})}"
+                               class="text-blue-600 hover:text-blue-900 text-sm">
+                                <span th:text="${lesson.course.title}"></span>
+                            </a>
+                            <div class="text-xs text-gray-500" th:text="${lesson.course.instructor.username}"></div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span th:text="${lesson.type}"
+                                  th:class="${lesson.type.name() == 'VIDEO' ? 'bg-blue-100 text-blue-800' :
+                                             lesson.type.name() == 'PDF' ? 'bg-red-100 text-red-800' :
+                                             lesson.type.name() == 'TEXT' ? 'bg-gray-100 text-gray-800' :
+                                             'bg-yellow-100 text-yellow-800'}
+                                           + ' px-2 inline-flex text-xs leading-5 font-semibold rounded-full'">
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                            th:text="${lesson.duration} + ' min'">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                            th:text="${#temporals.format(lesson.createdAt, 'MMM dd, yyyy')}">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <!-- View Button -->
+                                <a th:href="@{/admin/lessons/{id}(id=${lesson.id})}"
+                                   class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded hover:bg-blue-50"
+                                   title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+
+                                <!-- Edit Button -->
+                                <a th:href="@{/lessons/edit/{id}(id=${lesson.id})}"
+                                   class="text-yellow-600 hover:text-yellow-900 px-2 py-1 rounded hover:bg-yellow-50"
+                                   title="Edit Lesson">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                <!-- Delete Button -->
+                                <form th:action="@{/admin/lessons/{id}/delete(id=${lesson.id}, fromTab='lessons')}"
+                                      method="post" class="inline">
+                                    <button type="submit"
+                                            class="text-red-600 hover:text-red-900 px-2 py-1 rounded hover:bg-red-50"
+                                            title="Delete Lesson"
+                                            onclick="return confirm('Delete lesson: \'' + '${lesson.title}' + '\'?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <!-- Empty State -->
+                <div th:if="${allLessons.empty}" class="text-center py-12">
+                    <i class="fas fa-book-open text-gray-400 text-6xl mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">No lessons found</h3>
+                    <p class="text-gray-600">There are no lessons in the system yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="bg-gray-800 text-white py-8 mt-12">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <p>&copy; 2024 Learning Management System. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab switching
+        document.querySelectorAll('[id$="-tab"]').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.id.replace('-tab', '');
+                window.location.href = `/admin?tab=${tabName}`;
+            });
+        });
+
+        // Confirm before actions
+        document.querySelectorAll('form[action*="delete"], form[action*="reject"]').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const action = this.action.includes('delete') ? 'delete' : 'reject';
+                if (!confirm(`Are you sure you want to ${action} this?`)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Media - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+<nav th:replace="~{fragments/navigation :: navigation}"></nav>
+
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Upload Media</h1>
+        <p class="text-gray-600 mt-2">
+            Course: <span th:text="${course.title}" class="font-semibold"></span>
+            <span th:if="${lesson != null}">
+                → Lesson: <span th:text="${lesson.title}"></span>
+            </span>
+        </p>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <form th:action="@{/media/upload/course/{id}(id=${course.id}, lessonId=${lessonId})}"
+              method="post" enctype="multipart/form-data">
+
+            <!-- File Upload Area -->
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6"
+                 id="dropArea"
+                 onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" name="file" class="hidden"
+                       accept="video/*,image/*,audio/*,.pdf"
+                       onchange="previewFile()">
+
+                <div id="uploadIcon" class="mb-4">
+                    <i class="fas fa-cloud-upload-alt text-gray-400 text-5xl"></i>
+                </div>
+
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Drag & drop files here</h3>
+                <p class="text-gray-500 mb-4">or click to browse</p>
+
+                <!-- File Preview -->
+                <div id="filePreview" class="hidden mt-4">
+                    <div class="flex items-center justify-center space-x-4">
+                        <div id="previewIcon" class="text-3xl"></div>
+                        <div class="text-left">
+                            <h4 id="fileName" class="font-medium"></h4>
+                            <p id="fileSize" class="text-sm text-gray-500"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-xs text-gray-400 mt-4">
+                    Supported: Videos (MP4, MOV, AVI), Images (JPG, PNG), PDFs, Audio (MP3, WAV)<br>
+                    Max file size: 500MB
+                </p>
+            </div>
+
+            <!-- Upload Button -->
+            <div class="text-center">
+                <button type="submit"
+                        class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        id="uploadButton" disabled>
+                    <i class="fas fa-upload mr-2"></i>Upload File
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Upload Tips -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-blue-900 mb-3">
+            <i class="fas fa-lightbulb mr-2"></i>Upload Tips
+        </h3>
+        <ul class="space-y-2 text-blue-800">
+            <li><i class="fas fa-check-circle mr-2"></i>Videos are automatically optimized for streaming</li>
+            <li><i class="fas fa-check-circle mr-2"></i>PDFs can be viewed directly in browser</li>
+            <li><i class="fas fa-check-circle mr-2"></i>Images are automatically compressed</li>
+            <li><i class="fas fa-check-circle mr-2"></i>All files are stored securely in Cloudinary</li>
+        </ul>
+    </div>
+</main>
+
+<script>
+    const dropArea = document.getElementById('dropArea');
+    const fileInput = document.getElementById('fileInput');
+    const uploadButton = document.getElementById('uploadButton');
+    const filePreview = document.getElementById('filePreview');
+    const uploadIcon = document.getElementById('uploadIcon');
+
+    // Drag and drop functionality
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+        dropArea.classList.add('border-blue-500', 'bg-blue-50');
+    }
+
+    function unhighlight() {
+        dropArea.classList.remove('border-blue-500', 'bg-blue-50');
+    }
+
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        previewFile();
+    }
+
+    // Preview selected file
+    function previewFile() {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        // Enable upload button
+        uploadButton.disabled = false;
+
+        // Hide upload icon
+        uploadIcon.classList.add('hidden');
+
+        // Show preview
+        filePreview.classList.remove('hidden');
+
+        // Set file name
+        document.getElementById('fileName').textContent = file.name;
+
+        // Set file size
+        const fileSize = file.size;
+        let sizeText;
+        if (fileSize > 1024 * 1024) {
+            sizeText = (fileSize / (1024 * 1024)).toFixed(2) + ' MB';
+        } else {
+            sizeText = (fileSize / 1024).toFixed(2) + ' KB';
+        }
+        document.getElementById('fileSize').textContent = sizeText;
+
+        // Set preview icon based on file type
+        const previewIcon = document.getElementById('previewIcon');
+        if (file.type.startsWith('video/')) {
+            previewIcon.innerHTML = '<i class="fas fa-video text-red-500"></i>';
+        } else if (file.type.startsWith('image/')) {
+            previewIcon.innerHTML = '<i class="fas fa-image text-green-500"></i>';
+        } else if (file.type === 'application/pdf') {
+            previewIcon.innerHTML = '<i class="fas fa-file-pdf text-red-600"></i>';
+        } else if (file.type.startsWith('audio/')) {
+            previewIcon.innerHTML = '<i class="fas fa-music text-yellow-500"></i>';
+        } else {
+            previewIcon.innerHTML = '<i class="fas fa-file text-gray-500"></i>';
+        }
+    }
+</script>
+</body>
+</html>

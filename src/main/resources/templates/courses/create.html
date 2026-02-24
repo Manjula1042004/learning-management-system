@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Course - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- Navigation -->
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <a th:href="@{/}" class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">LearnPro</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a th:href="@{/courses}" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a th:href="@{/dashboard}" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Create New Course</h1>
+        <p class="text-gray-600 mt-2">Start your teaching journey by creating a new course</p>
+    </div>
+
+    <form th:action="@{/courses/create}" method="post" enctype="multipart/form-data"
+          class="bg-white rounded-lg shadow-lg p-6">
+        <div class="grid grid-cols-1 gap-6">
+            <!-- Course Title -->
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Course Title *</label>
+                <input type="text" id="title" name="title" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Enter course title">
+            </div>
+
+            <!-- Course Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                <textarea id="description" name="description" rows="4" required
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Describe your course"></textarea>
+            </div>
+
+            <!-- Course Price -->
+            <div>
+                <label for="price" class="block text-sm font-medium text-gray-700 mb-2">Price ($)</label>
+                <input type="number" id="price" name="price" step="0.01" min="0" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="0.00" value="0.00">
+            </div>
+
+            <!-- Thumbnail Upload -->
+            <div>
+                <label for="thumbnail" class="block text-sm font-medium text-gray-700 mb-2">Course Thumbnail *</label>
+                <input type="file" id="thumbnail" name="thumbnail" accept="image/*" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-sm text-gray-500 mt-1">
+                    <i class="fas fa-cloud mr-1"></i>
+                    Images will be uploaded to Cloudinary
+                </p>
+            </div>
+
+            <!-- ========== NEW: ADD LESSONS SECTION ========== -->
+            <div class="border-t border-gray-200 pt-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-plus-circle mr-2 text-blue-600"></i>Add Course Lessons
+                </h3>
+                <p class="text-sm text-gray-600 mb-6">Add your first lessons to the course (optional)</p>
+
+                <!-- Lesson 1 -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-semibold text-blue-800 mb-3">Lesson 1: Introduction</h4>
+
+                    <!-- Lesson Title -->
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Lesson Title</label>
+                        <input type="text" name="lessonTitles[]"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Introduction to the Course">
+                    </div>
+
+                    <!-- Lesson Description -->
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea name="lessonDescriptions[]" rows="2"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Brief description of this lesson"></textarea>
+                    </div>
+
+                    <!-- Lesson Duration -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+                        <input type="number" name="lessonDurations[]" min="1" value="30"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <!-- VIDEO CONTENT -->
+                    <div class="border-l-4 border-blue-500 pl-3 mb-4">
+                        <h5 class="font-medium text-gray-900 mb-2">Video Content</h5>
+
+                        <!-- Video File Upload -->
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Upload Video File</label>
+                            <input type="file" name="lessonVideoFiles[]" accept="video/*"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-gray-500 mt-1">MP4, MOV, AVI, WebM (Max 100MB)</p>
+                        </div>
+
+                        <!-- OR Separator -->
+                        <div class="relative my-3">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-gray-300"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-2 bg-white text-gray-500">OR</span>
+                            </div>
+                        </div>
+
+                        <!-- Video URL -->
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
+                            <input type="url" name="lessonVideoUrls[]"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="https://www.youtube.com/watch?v=... or direct video link">
+                            <p class="text-xs text-gray-500 mt-1">YouTube, Vimeo, or direct video URL</p>
+                        </div>
+                    </div>
+
+                    <!-- PDF CONTENT -->
+                    <div class="border-l-4 border-red-500 pl-3 mb-4">
+                        <h5 class="font-medium text-gray-900 mb-2">PDF Content</h5>
+
+                        <!-- PDF File Upload -->
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Upload PDF File</label>
+                            <input type="file" name="lessonPdfFiles[]" accept=".pdf"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-gray-500 mt-1">PDF files only (Max 50MB)</p>
+                        </div>
+
+                        <!-- OR Separator -->
+                        <div class="relative my-3">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-gray-300"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-2 bg-white text-gray-500">OR</span>
+                            </div>
+                        </div>
+
+                        <!-- PDF URL -->
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">PDF URL</label>
+                            <input type="url" name="lessonPdfUrls[]"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="https://example.com/document.pdf">
+                            <p class="text-xs text-gray-500 mt-1">Direct PDF URL</p>
+                        </div>
+                    </div>
+
+                    <!-- LINK CONTENT -->
+                    <div class="border-l-4 border-green-500 pl-3">
+                        <h5 class="font-medium text-gray-900 mb-2">External Links</h5>
+
+                        <!-- Link URLs -->
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Resources (URLs)</label>
+                            <input type="url" name="lessonResourceUrls[]"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                                   placeholder="https://example.com/resource1">
+                            <input type="url" name="lessonResourceUrls[]"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="https://example.com/resource2">
+                            <p class="text-xs text-gray-500 mt-1">Additional resource links (optional)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add More Lessons Button -->
+                <div class="text-center">
+                    <button type="button" onclick="addMoreLessons()"
+                            class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">
+                        <i class="fas fa-plus mr-2"></i>Add More Lessons
+                    </button>
+                    <p class="text-xs text-gray-500 mt-2">You can add more lessons later from the course page</p>
+                </div>
+            </div>
+            <!-- ========== END NEW SECTION ========== -->
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-4 pt-6">
+                <a th:href="@{/courses}"
+                   class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                    Create Course
+                </button>
+            </div>
+        </div>
+    </form>
+</main>
+
+<script>
+    // Function to add more lessons
+    let lessonCount = 1;
+
+    function addMoreLessons() {
+        lessonCount++;
+
+        const lessonsContainer = document.querySelector('.border-t.border-gray-200');
+        const firstLesson = document.querySelector('.bg-blue-50');
+        const newLesson = firstLesson.cloneNode(true);
+
+        // Update lesson number
+        const lessonHeader = newLesson.querySelector('h4');
+        lessonHeader.textContent = `Lesson ${lessonCount}: ${prompt('Enter lesson title:', 'New Lesson') || 'New Lesson'}`;
+
+        // Clear all input values
+        const inputs = newLesson.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            if (input.type !== 'file') {
+                input.value = '';
+            } else {
+                input.value = null;
+            }
+        });
+
+        // Set default duration
+        const durationInput = newLesson.querySelector('input[name="lessonDurations[]"]');
+        if (durationInput) {
+            durationInput.value = '30';
+        }
+
+        // Insert before the "Add More Lessons" button
+        const addMoreButton = document.querySelector('button[onclick="addMoreLessons()"]').parentElement.parentElement;
+        lessonsContainer.insertBefore(newLesson, addMoreButton);
+
+        // Scroll to new lesson
+        newLesson.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const title = document.getElementById('title').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const price = document.getElementById('price').value;
+        const thumbnail = document.getElementById('thumbnail').files.length;
+
+        if (!title || !description || !price || !thumbnail) {
+            e.preventDefault();
+            alert('Please fill in all required fields: Title, Description, Price, and Thumbnail.');
+            return false;
+        }
+
+        // Show creating message
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating Course...';
+        submitButton.disabled = true;
+
+        return true;
+    });
+</script>
+</body>
+</html>

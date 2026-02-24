@@ -1,0 +1,273 @@
+<!-- file: templates/instructor/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructor Dashboard - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- Navigation -->
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <a th:href="@{/}" class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">LearnPro</span>
+                </a>
+            </div>
+
+            <div class="flex items-center space-x-6">
+                <a th:href="@{/courses}" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a th:href="@{/instructor}" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                <a th:href="@{/instructor/my-courses}" class="text-gray-600 hover:text-blue-600">My Courses</a>
+                <a th:href="@{/instructor/enrolled-students}" class="text-gray-600 hover:text-blue-600">Students</a>
+                <a th:href="@{/instructor/analytics}" class="text-gray-600 hover:text-blue-600">Analytics</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="relative group">
+                    <button class="flex items-center space-x-2 text-gray-600 hover:text-blue-600">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                            <span th:text="${user.username.substring(0, 1).toUpperCase()}">U</span>
+                        </div>
+                        <span th:text="${user.username}">User</span>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 hidden group-hover:block z-50">
+                        <a th:href="@{/profile}" class="block px-4 py-2 text-gray-800 hover:bg-blue-50">Profile</a>
+                        <a th:href="@{/auth/logout}" class="block px-4 py-2 text-gray-800 hover:bg-blue-50">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Instructor Dashboard</h1>
+        <p class="text-gray-600 mt-2">Welcome back, <span th:text="${user.username}">Instructor</span>!</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <i class="fas fa-chalkboard-teacher text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900">My Courses</h3>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${stats.courseCount}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <i class="fas fa-users text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Total Students</h3>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${stats.studentCount}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <i class="fas fa-dollar-sign text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Total Revenue</h3>
+                    <p class="text-2xl font-bold text-gray-900"
+                       th:text="'$' + ${#numbers.formatDecimal(stats.totalRevenue, 1, 2, 'COMMA')}">$0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <a th:href="@{/courses/create}" class="bg-blue-600 text-white p-6 rounded-lg text-center hover:bg-blue-700 transition-colors">
+                <i class="fas fa-plus text-3xl mb-3"></i>
+                <p class="font-semibold text-lg">Create Course</p>
+                <p class="text-sm opacity-90 mt-2">Start a new course</p>
+            </a>
+            <a th:href="@{/courses}" class="bg-green-600 text-white p-6 rounded-lg text-center hover:bg-green-700 transition-colors">
+                <i class="fas fa-book text-3xl mb-3"></i>
+                <p class="font-semibold text-lg">Manage Courses</p>
+                <p class="text-sm opacity-90 mt-2">Edit existing courses</p>
+            </a>
+            <a th:href="@{/instructor/enrolled-students}" class="bg-purple-600 text-white p-6 rounded-lg text-center hover:bg-purple-700 transition-colors">
+                <i class="fas fa-users text-3xl mb-3"></i>
+                <p class="font-semibold text-lg">View Students</p>
+                <p class="text-sm opacity-90 mt-2">See enrolled students</p>
+            </a>
+            <a th:href="@{/instructor/analytics}" class="bg-yellow-600 text-white p-6 rounded-lg text-center hover:bg-yellow-700 transition-colors">
+                <i class="fas fa-chart-bar text-3xl mb-3"></i>
+                <p class="font-semibold text-lg">Analytics</p>
+                <p class="text-sm opacity-90 mt-2">Course performance</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Courses -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">My Courses</h2>
+        </div>
+        <div class="p-6">
+            <div class="space-y-4">
+                <div th:each="course : ${myCourses}" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900" th:text="${course.title}"></h4>
+                            <p class="text-sm text-gray-600 mt-1" th:text="${course.enrollments.size()} + ' students enrolled'"></p>
+                            <div class="flex items-center mt-2 space-x-2">
+                                    <span th:text="${course.status}"
+                                          th:class="${course.status == 'APPROVED' ? 'bg-green-100 text-green-800' :
+                                                     course.status == 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                                     'bg-red-100 text-red-800'}
+                                                    + ' text-xs px-2 py-1 rounded-full'">
+                                    </span>
+                                <span class="text-sm text-gray-500" th:text="'$' + ${course.price}"></span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <!-- VIEW button -->
+                            <a th:href="@{/courses/{id}(id=${course.id})}"
+                               class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 ml-4 whitespace-nowrap">
+                                View
+                            </a>
+
+                            <!-- EDIT button -->
+                            <a th:href="@{/courses/{id}/edit(id=${course.id})}"
+                               class="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 whitespace-nowrap">
+                                Edit
+                            </a>
+
+                            <!-- DELETE button -->
+                            <form th:action="@{/instructor/courses/{id}/delete(id=${course.id})}"
+                                  method="post" class="inline"
+                                  onsubmit="return confirm('Are you sure you want to delete this course? This action cannot be undone.')">
+                                <button type="submit"
+                                        class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 whitespace-nowrap">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${myCourses.empty}" class="text-center py-8">
+                <i class="fas fa-book-open text-gray-400 text-6xl mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No courses yet</h3>
+                <p class="text-gray-600 mb-4">Create your first course to start teaching</p>
+                <a th:href="@{/courses/create}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    Create Your First Course
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Available Courses -->
+    <div class="bg-white rounded-lg shadow mt-8">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">All Available Courses in System</h2>
+            <p class="text-gray-600 mt-1">Browse all courses created by all instructors</p>
+        </div>
+        <div class="p-6">
+            <div class="space-y-4">
+                <div th:each="course : ${allCourses}" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900" th:text="${course.title}"></h4>
+                            <p class="text-sm text-gray-600 mt-1 line-clamp-2" th:text="${course.description}"></p>
+                            <div class="flex items-center mt-2 space-x-4">
+                                <span th:text="${course.status}"
+                                      th:class="${course.status == 'APPROVED' ? 'bg-green-100 text-green-800' :
+                                                 course.status == 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                                 'bg-red-100 text-red-800'}
+                                                + ' text-xs px-2 py-1 rounded-full'">
+                                </span>
+                                <span class="text-sm text-gray-500" th:text="'$' + ${course.price}"></span>
+                                <span class="text-sm text-gray-500" th:text="${course.instructor.username} + ' (Instructor)'"></span>
+                                <span class="text-sm text-gray-500" th:text="${course.lessons.size()} + ' lessons'"></span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <!-- VIEW button -->
+                            <a th:href="@{/courses/{id}(id=${course.id})}"
+                               class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 ml-4 whitespace-nowrap">
+                                View
+                            </a>
+
+                            <!-- EDIT button -->
+                            <a th:href="@{/courses/{id}/edit(id=${course.id})}"
+                               class="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 whitespace-nowrap">
+                                Edit
+                            </a>
+
+                            <!-- DELETE button -->
+                            <form th:action="@{/instructor/courses/{id}/delete(id=${course.id})}"
+                                  method="post" class="inline"
+                                  onsubmit="return confirm('Are you sure you want to delete this course? This action cannot be undone.')">
+                                <button type="submit"
+                                        class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 whitespace-nowrap">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${allCourses.empty}" class="text-center py-8">
+                <i class="fas fa-book-open text-gray-400 text-6xl mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No courses available</h3>
+                <p class="text-gray-600 mb-4">Be the first to create a course!</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-800 text-white py-8 mt-12">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <p>&copy; 2024 Learning Management System. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    // Dropdown functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.group').forEach(group => {
+            group.addEventListener('click', function(e) {
+                const menu = this.querySelector('.hidden');
+                if (menu) {
+                    menu.classList.toggle('hidden');
+                }
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.group')) {
+                document.querySelectorAll('.group .hidden').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>

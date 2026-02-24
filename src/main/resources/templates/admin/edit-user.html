@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Edit User - ' + ${userToEdit.username} + ' - LMS'">Edit User - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+<nav th:replace="~{fragments/navigation :: navigation}"></nav>
+
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Edit User</h1>
+        <p class="text-gray-600 mt-2">Update user information and permissions</p>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <span th:text="${error}"></span>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- User Info Card -->
+        <div class="bg-blue-50 p-6 border-b border-gray-200">
+            <div class="flex items-center space-x-4">
+                <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-semibold">
+                    <span th:text="${userToEdit.username.substring(0, 1).toUpperCase()}">U</span>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900" th:text="${userToEdit.username}"></h2>
+                    <p class="text-gray-600" th:text="${userToEdit.email}"></p>
+                    <div class="flex items-center space-x-2 mt-2">
+                        <span th:text="${userToEdit.role}"
+                              th:class="${userToEdit.role == 'ADMIN' ? 'bg-purple-100 text-purple-800' :
+                                         userToEdit.role == 'INSTRUCTOR' ? 'bg-blue-100 text-blue-800' :
+                                         'bg-green-100 text-green-800'}
+                                         + ' px-3 py-1 rounded-full text-sm font-medium'">
+                        </span>
+                        <span th:if="${userToEdit.enabled}" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                            <i class="fas fa-check-circle mr-1"></i>Active
+                        </span>
+                        <span th:unless="${userToEdit.enabled}" class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                            <i class="fas fa-times-circle mr-1"></i>Disabled
+                        </span>
+                        <span class="text-gray-500 text-sm" th:text="${#temporals.format(userToEdit.createdAt, 'MMM dd, yyyy')}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Form -->
+        <form th:action="@{/admin/users/{id}/edit(id=${userToEdit.id})}" method="post" class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-1"></i>Username
+                    </label>
+                    <input type="text" id="username" name="username" required
+                           th:value="${userToEdit.username}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-1"></i>Email
+                    </label>
+                    <input type="email" id="email" name="email" required
+                           th:value="${userToEdit.email}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Role -->
+                <div>
+                    <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user-tag mr-1"></i>Role
+                    </label>
+                    <select id="role" name="role" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option th:each="role : ${roles}"
+                                th:value="${role}"
+                                th:selected="${userToEdit.role == role}"
+                                th:text="${role}">
+                        </option>
+                    </select>
+                    <p class="text-sm text-gray-500 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <span th:if="${userToEdit.role == 'ADMIN'}">Admin has full system access</span>
+                        <span th:if="${userToEdit.role == 'INSTRUCTOR'}">Instructor can create and manage courses</span>
+                        <span th:if="${userToEdit.role == 'STUDENT'}">Student can enroll in and view courses</span>
+                    </p>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-power-off mr-1"></i>Account Status
+                    </label>
+                    <div class="flex items-center space-x-4">
+                        <div th:if="${userToEdit.enabled}" class="text-green-600">
+                            <i class="fas fa-check-circle text-xl"></i>
+                            <p class="text-sm font-medium">Active</p>
+                        </div>
+                        <div th:unless="${userToEdit.enabled}" class="text-red-600">
+                            <i class="fas fa-times-circle text-xl"></i>
+                            <p class="text-sm font-medium">Disabled</p>
+                        </div>
+                        <form th:action="@{/admin/users/{id}/toggle-status(id=${userToEdit.id})}" method="post" class="inline">
+                            <button type="submit"
+                                    th:text="${userToEdit.enabled ? 'Disable Account' : 'Enable Account'}"
+                                    th:class="${userToEdit.enabled ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}
+                                               + ' px-4 py-2 rounded-lg font-medium'">
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center pt-8 mt-8 border-t border-gray-200">
+                <div>
+                    <a th:href="@{/admin?tab=users}"
+                       class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 font-medium">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Users
+                    </a>
+                </div>
+
+                <div class="flex space-x-4">
+                    <!-- Delete Button -->
+                    <form th:action="@{/admin/users/{id}/delete(id=${userToEdit.id})}" method="post"
+                          onsubmit="return confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')">
+                        <button type="submit"
+                                class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 font-medium">
+                            <i class="fas fa-trash mr-2"></i>Delete User
+                        </button>
+                    </form>
+
+                    <!-- Update Button -->
+                    <button type="submit"
+                            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium">
+                        <i class="fas fa-save mr-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- User Statistics -->
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <i class="fas fa-calendar text-blue-600"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Member Since</h3>
+                    <p class="text-2xl font-bold text-gray-900"
+                       th:text="${#temporals.format(userToEdit.createdAt, 'MMM dd, yyyy')}"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <i class="fas fa-book text-green-600"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Courses Created</h3>
+                    <p class="text-2xl font-bold text-gray-900"
+                       th:text="${userToEdit.courses != null ? userToEdit.courses.size() : 0}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <i class="fas fa-graduation-cap text-purple-600"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Enrollments</h3>
+                    <p class="text-2xl font-bold text-gray-900"
+                       th:text="${userToEdit.enrollments != null ? userToEdit.enrollments.size() : 0}">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Confirm before disabling account
+        document.querySelectorAll('form[action*="toggle-status"]').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const isEnabled = this.querySelector('button').textContent.includes('Disable');
+                const action = isEnabled ? 'disable' : 'enable';
+                if (!confirm(`Are you sure you want to ${action} this user's account?`)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

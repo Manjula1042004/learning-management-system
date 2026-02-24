@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${course.title} + ' - Media Library'">Media Library - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+<nav th:replace="~{fragments/navigation :: navigation}"></nav>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Media Library</h1>
+                <p class="text-gray-600 mt-2">Course: <span th:text="${course.title}" class="font-semibold"></span></p>
+            </div>
+            <div class="flex space-x-4">
+                <a th:href="@{/courses/{id}(id=${course.id})}"
+                   class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
+                    Back to Course
+                </a>
+                <a th:href="@{/media/upload/course/{id}(id=${course.id})}"
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-upload mr-2"></i>Upload Media
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-center">
+                <i class="fas fa-file text-blue-500 text-2xl mb-2"></i>
+                <p class="text-sm text-gray-600">Total Files</p>
+                <p class="text-xl font-bold" th:text="${statistics.totalFiles}">0</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-center">
+                <i class="fas fa-hdd text-purple-500 text-2xl mb-2"></i>
+                <p class="text-sm text-gray-600">Storage Used</p>
+                <!-- FIXED LINE: Changed from formattedTotalSize() to formattedTotalSize -->
+                <p class="text-xl font-bold" th:text="${statistics.formattedTotalSize}">0</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-center">
+                <i class="fas fa-video text-red-500 text-2xl mb-2"></i>
+                <p class="text-sm text-gray-600">Videos</p>
+                <p class="text-xl font-bold" th:text="${statistics.videoCount}">0</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-center">
+                <i class="fas fa-file-pdf text-red-600 text-2xl mb-2"></i>
+                <p class="text-sm text-gray-600">PDFs</p>
+                <p class="text-xl font-bold" th:text="${statistics.pdfCount}">0</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-center">
+                <i class="fas fa-image text-green-500 text-2xl mb-2"></i>
+                <p class="text-sm text-gray-600">Images</p>
+                <p class="text-xl font-bold" th:text="${statistics.imageCount}">0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Type Filter -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="flex flex-wrap gap-2">
+            <a th:href="@{/media/course/{id}(id=${course.id})}"
+               th:class="'px-4 py-2 rounded-lg ' + (${selectedFileType == null} ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')">
+                All Files
+            </a>
+            <a th:href="@{/media/course/{id}(id=${course.id}, fileType='video')}"
+               th:class="'px-4 py-2 rounded-lg ' + (${selectedFileType == 'video'} ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')">
+                <i class="fas fa-video mr-1"></i> Videos
+            </a>
+            <a th:href="@{/media/course/{id}(id=${course.id}, fileType='pdf')}"
+               th:class="'px-4 py-2 rounded-lg ' + (${selectedFileType == 'pdf'} ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')">
+                <i class="fas fa-file-pdf mr-1"></i> PDFs
+            </a>
+            <a th:href="@{/media/course/{id}(id=${course.id}, fileType='image')}"
+               th:class="'px-4 py-2 rounded-lg ' + (${selectedFileType == 'image'} ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')">
+                <i class="fas fa-image mr-1"></i> Images
+            </a>
+            <a th:href="@{/media/course/{id}(id=${course.id}, fileType='audio')}"
+               th:class="'px-4 py-2 rounded-lg ' + (${selectedFileType == 'audio'} ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')">
+                <i class="fas fa-music mr-1"></i> Audio
+            </a>
+        </div>
+    </div>
+
+    <!-- Media Files Grid -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Media Files</h2>
+        </div>
+        <div class="p-6">
+            <div th:if="${mediaList.empty}" class="text-center py-12">
+                <i class="fas fa-folder-open text-gray-400 text-6xl mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No media files</h3>
+                <p class="text-gray-600 mb-4">Upload your first media file to enhance your course</p>
+                <a th:href="@{/media/upload/course/{id}(id=${course.id})}"
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-upload mr-2"></i>Upload Files
+                </a>
+            </div>
+
+            <div th:unless="${mediaList.empty}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div th:each="media : ${mediaList}" class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                    <!-- Media Preview -->
+                    <div class="h-48 bg-gray-100 flex items-center justify-center relative">
+                        <th:block th:if="${media.fileType == 'video'}">
+                            <i class="fas fa-play-circle text-red-500 text-5xl"></i>
+                            <div class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                                <i class="fas fa-clock mr-1"></i>
+                                <span th:text="${media.fileSize > 1048576 ? (media.fileSize/1048576).intValue() + 'MB' : (media.fileSize/1024).intValue() + 'KB'}"></span>
+                            </div>
+                        </th:block>
+                        <th:block th:if="${media.fileType == 'pdf'}">
+                            <i class="fas fa-file-pdf text-red-600 text-5xl"></i>
+                        </th:block>
+                        <th:block th:if="${media.fileType == 'image'}">
+                            <img th:src="${media.fileUrl}" class="h-full w-full object-cover" alt="Image preview">
+                        </th:block>
+                        <th:block th:if="${media.fileType == 'audio'}">
+                            <i class="fas fa-music text-yellow-500 text-5xl"></i>
+                        </th:block>
+                    </div>
+
+                    <!-- Media Info -->
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-900 truncate" th:text="${media.originalFileName}"></h3>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="text-sm text-gray-500">
+                                <i class="fas fa-user mr-1"></i>
+                                <span th:text="${media.uploadedBy.username}"></span>
+                            </div>
+                            <div class="text-xs text-gray-500" th:text="${#temporals.format(media.uploadedAt, 'MMM dd')}"></div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex justify-between items-center mt-4">
+                            <div class="flex space-x-2">
+                                <a th:href="${media.fileUrl}" target="_blank"
+                                   class="text-blue-600 hover:text-blue-800 text-sm">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                                <button onclick="copyToClipboard('${media.fileUrl}')"
+                                        class="text-gray-600 hover:text-gray-800 text-sm">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+
+                            <form th:action="@{/media/delete/{id}(id=${media.id}, courseId=${course.id})}"
+                                  method="post"
+                                  onsubmit="return confirm('Delete this file?')">
+                                <button type="submit"
+                                        class="text-red-600 hover:text-red-800 text-sm">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('URL copied to clipboard!');
+        });
+    }
+</script>
+</body>
+</html>

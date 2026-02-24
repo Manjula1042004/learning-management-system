@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Edit ' + ${lesson.title} + ' - LMS'">Edit Lesson - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <a th:href="@{/}" class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">LearnPro</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a th:href="@{/courses}" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a th:href="@{/dashboard}" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Edit Lesson</h1>
+        <p class="text-gray-600 mt-2">Update lesson: <span th:text="${lesson.title}" class="font-semibold"></span></p>
+        <p class="text-sm text-gray-500">Course: <span th:text="${lesson.course.title}"></span></p>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+        <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <span th:text="${error}"></span>
+    </div>
+
+    <form th:action="@{/lessons/edit/{id}(id=${lesson.id})}" method="post"
+          enctype="multipart/form-data" class="bg-white rounded-lg shadow-lg p-6">
+        <div class="grid grid-cols-1 gap-6">
+            <!-- Lesson Title -->
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Lesson Title *</label>
+                <input type="text" id="title" name="title" required th:value="${lesson.title}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Lesson Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                <textarea id="description" name="description" rows="4" required
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          th:text="${lesson.description}"></textarea>
+            </div>
+
+            <!-- Duration -->
+            <div>
+                <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes) *</label>
+                <input type="number" id="duration" name="duration" min="1" required th:value="${lesson.duration}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Lesson Type -->
+            <div>
+                <label for="type" class="block text-sm font-medium text-gray-700 mb-2">Lesson Type *</label>
+                <select id="type" name="type" required onchange="toggleUploadOptions()"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Select Lesson Type</option>
+                    <option th:each="lessonType : ${lessonTypes}"
+                            th:value="${lessonType}"
+                            th:selected="${lesson.type == lessonType}"
+                            th:text="${lessonType}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- VIDEO UPLOAD OPTIONS -->
+            <div id="videoOptions" th:classappend="${lesson.type.name() == 'VIDEO' ? '' : 'hidden'}">
+                <div class="border-l-4 border-blue-500 pl-4 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Video Content</h3>
+
+                    <!-- Current Video -->
+                    <div th:if="${lesson.videoUrl != null and !lesson.videoUrl.isEmpty()}" class="mb-4">
+                        <p class="text-sm text-gray-600 mb-2">Current video:</p>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <p class="text-sm truncate" th:text="${lesson.videoUrl}"></p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <span th:if="${lesson.isYouTubeVideo()}">YouTube Video</span>
+                                <span th:if="${lesson.isVimeoVideo()}">Vimeo Video</span>
+                                <span th:if="${lesson.isDirectVideo()}">Direct Video File</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="text-sm text-gray-600 mb-3">
+                        <i class="fas fa-cloud text-blue-500 mr-1"></i>
+                        Uploaded videos will be stored securely in Cloudinary
+                    </p>
+
+                    <!-- Option 1: File Upload -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <input type="radio" name="videoSource" value="file" onchange="toggleVideoSource()">
+                            Upload New Video File
+                        </label>
+                        <input type="file" id="videoFile" name="videoFile" accept="video/*"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hidden">
+                        <p class="text-sm text-gray-500 mt-1">Supported: MP4, MOV, AVI, WebM (Max 100MB)</p>
+                    </div>
+
+                    <!-- Option 2: URL Upload -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <input type="radio" name="videoSource" value="url" checked onchange="toggleVideoSource()">
+                            Use Video URL
+                        </label>
+                        <input type="url" id="videoUrl" name="videoUrl" th:value="${lesson.videoUrl}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="https://example.com/video.mp4 or YouTube/Vimeo URL">
+                        <p class="text-sm text-gray-500 mt-1">Enter direct video URL or YouTube/Vimeo link</p>
+                    </div>
+
+                    <!-- Option 3: Keep Current -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <input type="radio" name="videoSource" value="keep" checked th:if="${lesson.videoUrl != null}" onchange="toggleVideoSource()">
+                            Keep Current Video
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF UPLOAD OPTIONS -->
+            <div id="pdfOptions" th:classappend="${lesson.type.name() == 'PDF' ? '' : 'hidden'}">
+                <div class="border-l-4 border-green-500 pl-4 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">PDF Content</h3>
+
+                    <!-- Current PDF -->
+                    <div th:if="${lesson.resourceUrl != null and !lesson.resourceUrl.isEmpty()}" class="mb-4">
+                        <p class="text-sm text-gray-600 mb-2">Current PDF:</p>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <p class="text-sm truncate" th:text="${lesson.resourceUrl}"></p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <span th:if="${lesson.resourceUrl.contains('cloudinary.com')}">Cloudinary PDF</span>
+                                <span th:if="${lesson.resourceUrl.startsWith('file:///')}">Local PDF</span>
+                                <span th:if="${lesson.resourceUrl.startsWith('https://') and !lesson.resourceUrl.contains('cloudinary.com')}">External PDF</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="text-sm text-gray-600 mb-3">
+                        <i class="fas fa-cloud text-green-500 mr-1"></i>
+                        <strong>Important:</strong> PDFs uploaded to Cloudinary can be viewed directly in browser.
+                    </p>
+
+                    <!-- Option 1: File Upload -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <input type="radio" name="pdfSource" value="file" onchange="togglePdfSource()">
+                            Upload New PDF File
+                        </label>
+                        <input type="file" id="pdfFile" name="pdfFile" accept=".pdf"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hidden">
+                        <p class="text-sm text-green-600 mt-1">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Will be uploaded to Cloudinary and viewable directly in browser
+                        </p>
+                    </div>
+
+                    <!-- Option 2: URL Upload -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <input type="radio" name="pdfSource" value="url" onchange="togglePdfSource()">
+                            Use PDF URL
+                        </label>
+                        <input type="url" id="pdfUrl" name="pdfUrl" th:value="${lesson.resourceUrl}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hidden"
+                               placeholder="https://example.com/document.pdf">
+                        <p class="text-sm text-gray-500 mt-1">
+                            Enter PDF URL (must start with https://)
+                        </p>
+                    </div>
+
+                    <!-- Option 3: Keep Current -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <input type="radio" name="pdfSource" value="keep" checked th:if="${lesson.resourceUrl != null}" onchange="togglePdfSource()">
+                            Keep Current PDF
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IMAGE UPLOAD OPTIONS -->
+            <div id="imageOptions" th:classappend="${lesson.type.name() == 'IMAGE' ? '' : 'hidden'}">
+                <div class="border-l-4 border-purple-500 pl-4 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Image Content</h3>
+
+                    <!-- Current Image -->
+                    <div th:if="${lesson.resourceUrl != null and !lesson.resourceUrl.isEmpty()}" class="mb-4">
+                        <p class="text-sm text-gray-600 mb-2">Current image:</p>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <p class="text-sm truncate" th:text="${lesson.resourceUrl}"></p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <span th:if="${lesson.resourceUrl.contains('cloudinary.com')}">Cloudinary Image</span>
+                                <span th:if="${lesson.resourceUrl.startsWith('file:///')}">Local Image</span>
+                                <span th:if="${lesson.resourceUrl.startsWith('https://') and !lesson.resourceUrl.contains('cloudinary.com')}">External Image</span>
+                            </p>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <div class="mt-3 border border-gray-300 rounded-lg overflow-hidden shadow-lg">
+                            <img th:src="${lesson.resourceUrl}"
+                                 alt="Current Lesson Image"
+                                 class="w-full h-auto max-h-[300px] object-contain mx-auto">
+                        </div>
+                    </div>
+
+                    <p class="text-sm text-gray-600 mb-3">
+                        <i class="fas fa-cloud text-purple-500 mr-1"></i>
+                        Uploaded images will be stored securely in Cloudinary
+                    </p>
+
+                    <!-- Option 1: File Upload -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <input type="radio" name="imageSource" value="file" onchange="toggleImageSource()">
+                            Upload New Image File
+                        </label>
+                        <input type="file" id="imageFile" name="imageFile" accept="image/*"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hidden">
+                        <p class="text-sm text-gray-500 mt-1">Supported: JPG, JPEG, PNG, GIF, WebP (Max 20MB)</p>
+                    </div>
+
+                    <!-- Option 2: URL Upload -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <input type="radio" name="imageSource" value="url" onchange="toggleImageSource()">
+                            Use Image URL
+                        </label>
+                        <input type="url" id="imageUrl" name="imageUrl" th:value="${lesson.resourceUrl}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hidden"
+                               placeholder="https://example.com/image.jpg">
+                        <p class="text-sm text-gray-500 mt-1">Enter image URL (must start with https://)</p>
+                    </div>
+
+                    <!-- Option 3: Keep Current -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <input type="radio" name="imageSource" value="keep" checked th:if="${lesson.resourceUrl != null}" onchange="toggleImageSource()">
+                            Keep Current Image
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TEXT Content -->
+            <div id="textOptions" th:classappend="${lesson.type.name() == 'TEXT' ? '' : 'hidden'}">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-blue-800">📝 <strong>TEXT Lesson:</strong> Just update your content in the description above.</p>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-between space-x-4 pt-6">
+                <div class="flex space-x-4">
+                    <a th:href="@{/courses/{id}(id=${lesson.course.id})}"
+                       class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Update Lesson
+                    </button>
+                </div>
+
+                <!-- Delete Button -->
+                <form th:action="@{/lessons/delete/{id}(id=${lesson.id})}" method="post"
+                      onsubmit="return confirm('Are you sure you want to delete this lesson? This action cannot be undone.')">
+                    <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                        <i class="fas fa-trash mr-2"></i>Delete Lesson
+                    </button>
+                </form>
+            </div>
+        </div>
+    </form>
+</main>
+
+<script>
+    function toggleUploadOptions() {
+        const lessonType = document.getElementById('type').value;
+
+        document.getElementById('videoOptions').classList.add('hidden');
+        document.getElementById('pdfOptions').classList.add('hidden');
+        document.getElementById('imageOptions').classList.add('hidden');
+        document.getElementById('textOptions').classList.add('hidden');
+
+        if (lessonType === 'VIDEO') {
+            document.getElementById('videoOptions').classList.remove('hidden');
+        } else if (lessonType === 'PDF') {
+            document.getElementById('pdfOptions').classList.remove('hidden');
+        } else if (lessonType === 'IMAGE') {
+            document.getElementById('imageOptions').classList.remove('hidden');
+        } else if (lessonType === 'TEXT') {
+            document.getElementById('textOptions').classList.remove('hidden');
+        }
+    }
+
+    function toggleVideoSource() {
+        const videoSource = document.querySelector('input[name="videoSource"]:checked').value;
+        const videoFileInput = document.getElementById('videoFile');
+        const videoUrlInput = document.getElementById('videoUrl');
+
+        videoFileInput.classList.add('hidden');
+        videoUrlInput.classList.add('hidden');
+
+        if (videoSource === 'file') {
+            videoFileInput.classList.remove('hidden');
+            videoFileInput.required = true;
+            videoUrlInput.required = false;
+        } else if (videoSource === 'url') {
+            videoUrlInput.classList.remove('hidden');
+            videoFileInput.required = false;
+            videoUrlInput.required = true;
+        } else {
+            videoFileInput.required = false;
+            videoUrlInput.required = false;
+        }
+    }
+
+    function togglePdfSource() {
+        const pdfSource = document.querySelector('input[name="pdfSource"]:checked').value;
+        const pdfFileInput = document.getElementById('pdfFile');
+        const pdfUrlInput = document.getElementById('pdfUrl');
+
+        pdfFileInput.classList.add('hidden');
+        pdfUrlInput.classList.add('hidden');
+
+        if (pdfSource === 'file') {
+            pdfFileInput.classList.remove('hidden');
+            pdfFileInput.required = true;
+            pdfUrlInput.required = false;
+        } else if (pdfSource === 'url') {
+            pdfUrlInput.classList.remove('hidden');
+            pdfFileInput.required = false;
+            pdfUrlInput.required = true;
+        } else {
+            pdfFileInput.required = false;
+            pdfUrlInput.required = false;
+        }
+    }
+
+    function toggleImageSource() {
+        const imageSource = document.querySelector('input[name="imageSource"]:checked').value;
+        const imageFileInput = document.getElementById('imageFile');
+        const imageUrlInput = document.getElementById('imageUrl');
+
+        imageFileInput.classList.add('hidden');
+        imageUrlInput.classList.add('hidden');
+
+        if (imageSource === 'file') {
+            imageFileInput.classList.remove('hidden');
+            imageFileInput.required = true;
+            imageUrlInput.required = false;
+        } else if (imageSource === 'url') {
+            imageUrlInput.classList.remove('hidden');
+            imageFileInput.required = false;
+            imageUrlInput.required = true;
+        } else {
+            imageFileInput.required = false;
+            imageUrlInput.required = false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleUploadOptions();
+
+        // Initialize based on current lesson type
+        if (document.querySelector('input[name="videoSource"]:checked')) {
+            toggleVideoSource();
+        }
+        if (document.querySelector('input[name="pdfSource"]:checked')) {
+            togglePdfSource();
+        }
+        if (document.querySelector('input[name="imageSource"]:checked')) {
+            toggleImageSource();
+        }
+    });
+</script>
+</body>
+</html>

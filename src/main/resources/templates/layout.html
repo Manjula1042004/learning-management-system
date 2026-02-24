@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} ? ${title} + ' - LMS' : 'Learning Management System'">LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom CSS */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- Navigation Fragment -->
+<nav th:fragment="nav" class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <a th:href="@{/}" class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">LearnPro</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a th:href="@{/courses}" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <th:block th:if="${#authentication != null and #authentication.authenticated}">
+                    <a th:href="@{/dashboard}" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                </th:block>
+            </div>
+            <div class="flex items-center space-x-4">
+                <th:block th:if="${#authentication != null and #authentication.authenticated}">
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2 text-gray-600 hover:text-blue-600">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                <span th:text="${#authentication.name.substring(0, 1).toUpperCase()}">U</span>
+                            </div>
+                            <span th:text="${#authentication.name}">User</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 hidden group-hover:block z-50">
+                            <a th:href="@{/auth/logout}" class="block px-4 py-2 text-gray-800 hover:bg-blue-50">Logout</a>
+                        </div>
+                    </div>
+                </th:block>
+                <th:block th:unless="${#authentication != null and #authentication.authenticated}">
+                    <a th:href="@{/auth/login}" class="text-gray-600 hover:text-blue-600">Login</a>
+                    <a th:href="@{/auth/register}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Sign Up</a>
+                </th:block>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Footer Fragment -->
+<footer th:fragment="footer" class="bg-gray-800 text-white py-8 mt-12">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <p>&copy; 2024 Learning Management System. All rights reserved.</p>
+    </div>
+</footer>
+</body>
+</html>

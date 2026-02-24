@@ -1,0 +1,109 @@
+<!-- file: templates/student/quiz.html -->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${quiz.title} + ' - Quiz'">Quiz - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center space-x-8">
+                <a th:href="@{/}" class="text-xl font-bold text-gray-800">LMS</a>
+                <div class="flex items-center space-x-6">
+                    <a th:href="@{/courses}" class="text-gray-600 hover:text-blue-600">Courses</a>
+                    <a th:href="@{/student}" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                    <a th:href="@{/student/progress}" class="text-gray-600 hover:text-blue-600">My Progress</a>
+                </div>
+            </div>
+            <div th:if="${session.user != null}" class="flex items-center space-x-4">
+                <span class="text-gray-600" th:text="${session.user.name}"></span>
+                <form th:action="@{/logout}" method="post" class="inline">
+                    <button type="submit" class="text-gray-600 hover:text-blue-600">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900" th:text="${quiz.title}"></h1>
+        <p class="text-gray-600 mt-2">Course: <span th:text="${quiz.course.title}"></span></p>
+    </div>
+
+    <!-- Quiz Instructions -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-clock text-blue-600 text-xl mr-3"></i>
+                    <div>
+                        <p class="text-sm text-gray-600">Duration</p>
+                        <p class="font-semibold" th:text="${quiz.duration} + ' minutes'"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-question-circle text-green-600 text-xl mr-3"></i>
+                    <div>
+                        <p class="text-sm text-gray-600">Total Questions</p>
+                        <p class="font-semibold" th:text="${quiz.totalQuestions}"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-purple-50 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-trophy text-purple-600 text-xl mr-3"></i>
+                    <div>
+                        <p class="text-sm text-gray-600">Passing Score</p>
+                        <p class="font-semibold" th:text="${quiz.passingScore} + '%'"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Previous Attempts -->
+        <div th:if="${!previousAttempts.empty}" class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Previous Attempts</h3>
+            <div class="space-y-2">
+                <div th:each="attempt : ${previousAttempts}"
+                     class="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
+                    <div>
+                        <span class="font-medium">Attempt #<span th:text="${attempt.attemptNumber}"></span></span>
+                        <span class="ml-3 text-sm" th:text="${#temporals.format(attempt.completedAt, 'MMM dd, yyyy HH:mm')}"></span>
+                    </div>
+                    <div class="flex items-center">
+                        <span th:text="${attempt.percentage} + '%'"
+                              th:class="${attempt.status == 'passed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
+                                       + ' px-3 py-1 rounded-full text-sm font-medium'">
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start Quiz Button -->
+        <div class="text-center">
+            <form th:action="@{/quiz/start/{id}(id=${quiz.id})}" method="post">
+                <button type="submit"
+                        class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold text-lg">
+                    <i class="fas fa-play mr-2"></i>Start Quiz
+                </button>
+            </form>
+            <p class="text-sm text-gray-500 mt-3">
+                <i class="fas fa-info-circle mr-1"></i>
+                You have <span th:text="${quiz.maxAttempts}"></span> attempts maximum
+            </p>
+        </div>
+    </div>
+</main>
+</body>
+</html>

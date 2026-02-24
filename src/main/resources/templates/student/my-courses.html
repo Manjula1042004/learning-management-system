@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Courses - Student Dashboard - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .course-card {
+            transition: all 0.3s ease;
+        }
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .lesson-item {
+            transition: background-color 0.2s ease;
+        }
+        .lesson-item:hover {
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- Navigation -->
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <a th:href="@{/}" class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">LearnPro</span>
+                </a>
+            </div>
+
+            <div class="flex items-center space-x-6">
+                <a th:href="@{/courses}" class="text-gray-600 hover:text-blue-600">Browse Courses</a>
+                <a th:href="@{/student}" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                <a th:href="@{/student/progress}" class="text-gray-600 hover:text-blue-600">My Progress</a>
+                <a th:href="@{/student/my-courses}" class="text-blue-600 hover:text-blue-800 font-medium">My Courses</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="relative group">
+                    <button class="flex items-center space-x-2 text-gray-600 hover:text-blue-600">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                            <span th:text="${user.username.substring(0, 1).toUpperCase()}">U</span>
+                        </div>
+                        <span th:text="${user.username}">Student</span>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 hidden group-hover:block z-50">
+                        <a th:href="@{/profile}" class="block px-4 py-2 text-gray-800 hover:bg-blue-50">Profile</a>
+                        <a th:href="@{/auth/logout}" class="block px-4 py-2 text-gray-800 hover:bg-blue-50">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">My Courses</h1>
+                <p class="text-gray-600 mt-2">All courses you're currently enrolled in</p>
+            </div>
+            <div class="flex space-x-4">
+                <a th:href="@{/student}"
+                   class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+                <a th:href="@{/courses}"
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-search mr-2"></i>Browse More Courses
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <span th:text="${error}"></span>
+    </div>
+    <div th:if="${info}" class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+        <i class="fas fa-info-circle mr-2"></i>
+        <span th:text="${info}"></span>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <i class="fas fa-book-open text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-600">Total Enrolled</p>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${enrollments.size()}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-600">Completed</p>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${completedCount}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-yellow-100 rounded-lg">
+                    <i class="fas fa-play-circle text-yellow-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-600">In Progress</p>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${inProgressCount}">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-600">Avg. Progress</p>
+                    <p class="text-2xl font-bold text-gray-900" th:text="${avgProgress} + '%'">0%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex-1">
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Search your courses..."
+                           class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="all">All Courses</option>
+                    <option value="active">In Progress</option>
+                    <option value="completed">Completed</option>
+                </select>
+                <button onclick="filterCourses()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-filter mr-2"></i>Filter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Courses Grid -->
+    <div th:if="${!enrollments.empty}" class="grid grid-cols-1 gap-6" id="coursesContainer">
+        <div th:each="enrollment : ${enrollments}"
+             class="course-card bg-white rounded-lg shadow-lg overflow-hidden"
+             th:attr="data-status=${enrollment.status.name().toLowerCase()},
+                      data-title=${enrollment.course.title.toLowerCase()}">
+
+            <!-- Course Header with Image -->
+            <div class="md:flex">
+                <!-- Thumbnail -->
+                <div class="md:w-64 h-48 md:h-auto bg-gradient-to-br from-blue-500 to-purple-600 relative">
+                    <img th:if="${enrollment.course.thumbnailUrl}"
+                         th:src="${enrollment.course.thumbnailUrl}"
+                         class="w-full h-full object-cover opacity-75"
+                         alt="Course thumbnail">
+                    <div th:unless="${enrollment.course.thumbnailUrl}"
+                         class="w-full h-full flex items-center justify-center">
+                        <i class="fas fa-book text-white text-5xl opacity-50"></i>
+                    </div>
+                    <div class="absolute top-3 right-3">
+                        <span th:text="${enrollment.status}"
+                              th:class="${enrollment.status.name() == 'COMPLETED'} ? 'bg-green-500' : 'bg-blue-500'
+                                       + ' text-white text-xs px-2 py-1 rounded-full font-medium'">
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Course Content -->
+                <div class="flex-1 p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900 mb-2" th:text="${enrollment.course.title}"></h2>
+                            <div class="flex items-center text-sm text-gray-600 space-x-4">
+                                <span>
+                                    <i class="fas fa-chalkboard-teacher mr-1"></i>
+                                    <span th:text="${enrollment.course.instructor.username}"></span>
+                                </span>
+                                <span>
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    Enrolled: <span th:text="${#temporals.format(enrollment.enrolledAt, 'MMM dd, yyyy')}"></span>
+                                </span>
+                            </div>
+                        </div>
+                        <span class="text-2xl font-bold text-green-600" th:text="'$' + ${enrollment.course.price}"></span>
+                    </div>
+
+                    <!-- Progress Section -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium text-gray-700">Course Progress</span>
+                            <span class="text-sm font-bold text-blue-600" th:text="${enrollment.progress} + '%'"></span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="progress-bar bg-blue-600 h-3 rounded-full"
+                                 th:style="'width: ' + ${enrollment.progress} + '%'"></div>
+                        </div>
+                    </div>
+
+                    <!-- Lessons Preview -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                            <i class="fas fa-list mr-2 text-blue-600"></i>Course Content
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <th:block th:each="lesson, stat : ${enrollment.course.lessons}">
+                                <div th:if="${stat.index < 4}"
+                                     class="lesson-item flex items-center p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <!-- Lesson Type Icon -->
+                                    <th:block th:switch="${lesson.type}">
+                                        <i th:case="'VIDEO'" class="fas fa-video text-blue-500 w-5"></i>
+                                        <i th:case="'PDF'" class="fas fa-file-pdf text-red-500 w-5"></i>
+                                        <i th:case="'IMAGE'" class="fas fa-image text-green-500 w-5"></i>
+                                        <i th:case="'TEXT'" class="fas fa-file-alt text-gray-500 w-5"></i>
+                                        <i th:case="'QUIZ'" class="fas fa-question-circle text-purple-500 w-5"></i>
+                                    </th:block>
+                                    <span class="ml-2 text-sm text-gray-700 truncate flex-1" th:text="${lesson.title}"></span>
+                                    <span class="text-xs text-gray-500 ml-2" th:text="${lesson.duration} + 'min'"></span>
+                                </div>
+                            </th:block>
+                            <div th:if="${enrollment.course.lessons.size() > 4}"
+                                 class="flex items-center justify-center p-2 bg-gray-100 rounded-lg border border-gray-200">
+                                <span class="text-sm text-gray-600">
+                                    <i class="fas fa-ellipsis-h mr-1"></i>
+                                    +<span th:text="${enrollment.course.lessons.size() - 4}"></span> more lessons
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Status -->
+                    <th:block th:each="lesson : ${enrollment.course.lessons}">
+                        <th:block th:if="${lesson.type.name() == 'QUIZ' and lesson.quiz != null}">
+                            <div class="mb-6 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-trophy text-purple-600 text-xl mr-3"></i>
+                                        <div>
+                                            <p class="text-sm font-medium text-purple-900">Quiz Available</p>
+                                            <p class="text-xs text-purple-700" th:text="${lesson.title}"></p>
+                                        </div>
+                                    </div>
+                                    <span class="bg-purple-200 text-purple-800 text-xs px-2 py-1 rounded-full">
+                                        <i class="fas fa-star mr-1"></i>Ready
+                                    </span>
+                                </div>
+                            </div>
+                        </th:block>
+                    </th:block>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-between items-center">
+                        <div class="flex space-x-3">
+                            <a th:href="@{/courses/{id}(id=${enrollment.course.id})}"
+                               class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-play mr-2"></i>Continue Learning
+                            </a>
+                            <a th:href="@{/courses/{id}(id=${enrollment.course.id})}"
+                               class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">
+                                <i class="fas fa-info-circle mr-1"></i>Details
+                            </a>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            <i th:if="${enrollment.status.name() == 'ACTIVE'}" class="fas fa-spinner fa-spin mr-1 text-blue-500"></i>
+                            <i th:if="${enrollment.status.name() == 'COMPLETED'}" class="fas fa-check-circle mr-1 text-green-500"></i>
+                            <span th:text="${enrollment.status.name() == 'ACTIVE' ? 'In Progress' : 'Completed'}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Completion Date (if completed) -->
+                    <div th:if="${enrollment.status.name() == 'COMPLETED' and enrollment.completedAt != null}"
+                         class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-calendar-check mr-1 text-green-500"></i>
+                            Completed on <span th:text="${#temporals.format(enrollment.completedAt, 'MMMM dd, yyyy')}"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${enrollments.empty}" class="text-center py-16 bg-white rounded-lg shadow-lg">
+        <div class="inline-block p-6 bg-blue-50 rounded-full mb-6">
+            <i class="fas fa-graduation-cap text-blue-400 text-6xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">No Courses Yet</h2>
+        <p class="text-gray-600 max-w-md mx-auto mb-6">
+            You haven't enrolled in any courses yet. Start your learning journey by browsing our course catalog!
+        </p>
+        <div class="flex justify-center space-x-4">
+            <a th:href="@{/courses}"
+               class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold inline-flex items-center">
+                <i class="fas fa-search mr-2"></i>Browse Courses
+            </a>
+            <a th:href="@{/student}"
+               class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-semibold inline-flex items-center">
+                <i class="fas fa-tachometer-alt mr-2"></i>Go to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Tips -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-blue-900 mb-3">
+            <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>Learning Tips
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center">
+                    <i class="fas fa-check text-blue-600"></i>
+                </div>
+                <p class="text-sm text-blue-800">Complete lessons in order for best learning experience</p>
+            </div>
+            <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clock text-blue-600"></i>
+                </div>
+                <p class="text-sm text-blue-800">Set aside regular time each day for your courses</p>
+            </div>
+            <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center">
+                    <i class="fas fa-question-circle text-blue-600"></i>
+                </div>
+                <p class="text-sm text-blue-800">Take notes and attempt all quizzes to reinforce learning</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-800 text-white py-8 mt-12">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <p>&copy; 2024 Learning Management System. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    // Filter functionality
+    function filterCourses() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const courses = document.querySelectorAll('[data-status]');
+
+        courses.forEach(course => {
+            const status = course.getAttribute('data-status');
+            const title = course.getAttribute('data-title') || '';
+
+            let statusMatch = statusFilter === 'all' || status === statusFilter;
+            let searchMatch = searchTerm === '' || title.includes(searchTerm);
+
+            if (statusMatch && searchMatch) {
+                course.style.display = '';
+            } else {
+                course.style.display = 'none';
+            }
+        });
+
+        // Show/hide empty message
+        const visibleCourses = Array.from(courses).filter(c => c.style.display !== 'none').length;
+        const container = document.getElementById('coursesContainer');
+        let emptyMessage = document.getElementById('noFilterResults');
+
+        if (visibleCourses === 0 && courses.length > 0) {
+            if (!emptyMessage) {
+                emptyMessage = document.createElement('div');
+                emptyMessage.id = 'noFilterResults';
+                emptyMessage.className = 'text-center py-12 bg-white rounded-lg shadow';
+                emptyMessage.innerHTML = `
+                    <i class="fas fa-search text-gray-400 text-5xl mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">No matching courses</h3>
+                    <p class="text-gray-600">Try adjusting your filters</p>
+                `;
+                container.parentNode.insertBefore(emptyMessage, container.nextSibling);
+            }
+            container.style.display = 'none';
+        } else {
+            if (emptyMessage) emptyMessage.remove();
+            container.style.display = '';
+        }
+    }
+
+    // Real-time search
+    document.getElementById('searchInput').addEventListener('keyup', filterCourses);
+    document.getElementById('statusFilter').addEventListener('change', filterCourses);
+
+    // Dropdown functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.group').forEach(group => {
+            group.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const menu = this.querySelector('.hidden');
+                if (menu) {
+                    menu.classList.toggle('hidden');
+                }
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.group')) {
+                document.querySelectorAll('.group .hidden').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        });
+
+        // Auto-dismiss flash messages
+        setTimeout(() => {
+            document.querySelectorAll('.bg-green-100, .bg-red-100, .bg-blue-100').forEach(msg => {
+                msg.style.transition = 'opacity 0.5s';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 500);
+            });
+        }, 5000);
+    });
+</script>
+</body>
+</html>

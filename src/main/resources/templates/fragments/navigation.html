@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="navigation" class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <a th:href="@{/}" class="flex items-center">
+                    <img th:src="@{/images/logo.png}" alt="LMS Logo" class="h-8 w-8 mr-2">
+                    <span class="text-xl font-bold text-gray-800">LearnPro</span>
+                </a>
+            </div>
+
+            <div class="hidden md:flex items-center space-x-6">
+                <a th:href="@{/courses}" class="text-gray-600 hover:text-blue-600">Courses</a>
+
+                <th:block th:if="${#authentication != null and #authentication.authenticated}">
+                    <a th:href="@{/dashboard}" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+
+                    <th:block th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                        <a th:href="@{/admin}" class="text-gray-600 hover:text-blue-600">Admin</a>
+                    </th:block>
+
+                    <th:block th:if="${#authorization.expression('hasRole(''INSTRUCTOR'')')}">
+                        <a th:href="@{/instructor}" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                        <a th:href="@{/instructor/enrolled-students}" class="text-gray-600 hover:text-blue-600">Students</a>
+                        <a th:href="@{/instructor/analytics}" class="text-gray-600 hover:text-blue-600">Analytics</a>
+                    </th:block>
+                </th:block>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <th:block th:if="${#authentication != null and #authentication.authenticated}">
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2 text-gray-600 hover:text-blue-600">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                <span th:text="${#authentication.name.substring(0, 1).toUpperCase()}">U</span>
+                            </div>
+                            <span th:text="${#authentication.name}">User</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 hidden group-hover:block z-50">
+                            <a th:href="@{/profile}" class="block px-4 py-2 text-gray-800 hover:bg-blue-50">Profile</a>
+                            <a th:href="@{/auth/logout}" class="block px-4 py-2 text-gray-800 hover:bg-blue-50">Logout</a>
+                        </div>
+                    </div>
+                </th:block>
+
+                <th:block th:unless="${#authentication != null and #authentication.authenticated}">
+                    <a th:href="@{/auth/login}" class="text-gray-600 hover:text-blue-600">Login</a>
+                    <a th:href="@{/auth/register}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Sign Up</a>
+                </th:block>
+            </div>
+        </div>
+    </div>
+</nav>
+</body>
+</html>

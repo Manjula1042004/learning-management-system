@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Quiz - LearnPro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin-top: 30px;
+        }
+        .quiz-form-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .question-card {
+            background: #fff;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .question-number {
+            background: #007bff;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .delete-question-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .delete-question-btn:hover {
+            background: #c82333;
+        }
+        .option-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .option-row input[type="text"] {
+            flex: 1;
+        }
+        .add-option-btn, .delete-option-btn {
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        .add-option-btn {
+            background: #28a745;
+            color: white;
+        }
+        .delete-option-btn {
+            background: #dc3545;
+            color: white;
+        }
+        .add-question-btn {
+            background: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .add-question-btn:hover {
+            background: #0056b3;
+        }
+        .submit-btn {
+            background: #28a745;
+            color: white;
+            padding: 12px 40px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background: #218838;
+        }
+        .delete-quiz-btn {
+            background: #dc3545;
+            color: white;
+            padding: 12px 40px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .alert {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-graduation-cap"></i> LearnPro
+        </a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" th:href="@{/courses}">Courses</a>
+            <a class="nav-link" th:href="@{/dashboard}">Dashboard</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Edit Quiz</h1>
+            <p class="text-muted">
+                Quiz: <strong th:text="${quiz.title}">Quiz Title</strong><br>
+                Course: <strong th:text="${course.title}">Course Title</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Quiz Edit Form -->
+    <form th:action="@{/instructor/quiz/edit/{id}(id=${quiz.id})}" method="post" id="quizForm">
+
+        <!-- Quiz Information Card -->
+        <div class="quiz-form-card">
+            <h3><i class="fas fa-info-circle"></i> Quiz Information</h3>
+            <hr>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="title" class="form-label">Quiz Title *</label>
+                    <input type="text" class="form-control" id="title" name="title"
+                           th:value="${quiz.title}" required>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="duration" class="form-label">Duration (minutes) *</label>
+                    <input type="number" class="form-control" id="duration" name="duration"
+                           th:value="${quiz.duration}" min="1" required>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="passingScore" class="form-label">Passing Score (%) *</label>
+                    <input type="number" class="form-control" id="passingScore" name="passingScore"
+                           th:value="${quiz.passingScore}" min="0" max="100" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="maxAttempts" class="form-label">Max Attempts</label>
+                    <input type="number" class="form-control" id="maxAttempts" name="maxAttempts"
+                           th:value="${quiz.maxAttempts}" min="1" value="3">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description"
+                          rows="3" th:text="${quiz.description}"></textarea>
+            </div>
+        </div>
+
+        <!-- Questions Section -->
+        <div class="quiz-form-card">
+            <h3><i class="fas fa-question-circle"></i> Questions</h3>
+            <hr>
+
+            <div id="questionsContainer">
+                <!-- Existing Questions -->
+                <div th:each="question, iterStat : ${quiz.questions}"
+                     class="question-card"
+                     th:attr="data-question-id=${question.id}">
+
+                    <div class="question-header">
+                        <span class="question-number" th:text="'Question ' + ${iterStat.count}">Question 1</span>
+                        <button type="button" class="delete-question-btn"
+                                th:onclick="'deleteExistingQuestion(' + ${iterStat.index} + ')'">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Question Text *</label>
+                        <textarea class="form-control" name="questionText" rows="2"
+                                  th:text="${question.questionText}" required></textarea>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Question Type *</label>
+                            <select class="form-select" name="questionType"
+                                    th:onchange="'changeQuestionTypeExisting(' + ${iterStat.index} + ')'"
+                                    required>
+                                <option value="multiple_choice"
+                                        th:selected="${question.questionType == 'multiple_choice'}">Multiple Choice</option>
+                                <option value="true_false"
+                                        th:selected="${question.questionType == 'true_false'}">True/False</option>
+                                <option value="short_answer"
+                                        th:selected="${question.questionType == 'short_answer'}">Short Answer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Points</label>
+                            <input type="number" class="form-control" name="points"
+                                   th:value="${question.points}" min="1" value="1">
+                        </div>
+                    </div>
+
+                    <!-- Multiple Choice Options -->
+                    <div class="options-section"
+                         th:style="${question.questionType == 'multiple_choice'} ? '' : 'display:none;'">
+                        <label class="form-label">Options *</label>
+                        <div class="options-container">
+                            <div th:each="option, optStat : ${question.options}" class="option-row">
+                                <input type="radio"
+                                       th:name="'question_' + ${iterStat.index} + '_correct'"
+                                       name="isCorrect"
+                                       th:value="'q' + ${iterStat.index} + '_o' + ${optStat.index}"
+                                       th:checked="${option.isCorrect}">
+                                <input type="text" class="form-control" name="optionText"
+                                       th:value="${option.optionText}" placeholder="Option text" required>
+                                <button type="button" class="delete-option-btn"
+                                        th:onclick="'deleteOptionExisting(this, ' + ${iterStat.index} + ')'"
+                                        th:disabled="${#lists.size(question.options) <= 2}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-option-btn mt-2"
+                                th:onclick="'addOptionExisting(' + ${iterStat.index} + ')'">
+                            <i class="fas fa-plus"></i> Add Option
+                        </button>
+                    </div>
+
+                    <!-- True/False Answer -->
+                    <div class="true-false-section"
+                         th:style="${question.questionType == 'true_false'} ? '' : 'display:none;'">
+                        <label class="form-label">Correct Answer *</label>
+                        <select class="form-select" name="correctAnswer">
+                            <option value="True" th:selected="${question.correctAnswer == 'True'}">True</option>
+                            <option value="False" th:selected="${question.correctAnswer == 'False'}">False</option>
+                        </select>
+                    </div>
+
+                    <!-- Short Answer -->
+                    <div class="short-answer-section"
+                         th:style="${question.questionType == 'short_answer'} ? '' : 'display:none;'">
+                        <label class="form-label">Correct Answer *</label>
+                        <input type="text" class="form-control" name="correctAnswer"
+                               th:value="${question.correctAnswer}" placeholder="Enter correct answer">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add New Question Button -->
+            <button type="button" class="add-question-btn" onclick="addNewQuestion()">
+                <i class="fas fa-plus"></i> Add New Question
+            </button>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="quiz-form-card">
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-save"></i> Update Quiz
+                </button>
+                <button type="button" class="delete-quiz-btn" onclick="confirmDeleteQuiz()">
+                    <i class="fas fa-trash"></i> Delete Quiz
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Delete Quiz Form (Hidden) -->
+<form th:action="@{/instructor/quiz/delete/{id}(id=${quiz.id})}" method="post" id="deleteQuizForm" style="display:none;"></form>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let questionCounter = [[${quiz.questions.size()}]];
+
+    function addNewQuestion() {
+        questionCounter++;
+        const container = document.getElementById('questionsContainer');
+
+        const questionHtml = `
+            <div class="question-card new-question">
+                <div class="question-header">
+                    <span class="question-number">Question ${questionCounter}</span>
+                    <button type="button" class="delete-question-btn" onclick="deleteNewQuestion(this)">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Question Text *</label>
+                    <textarea class="form-control" name="questionText" rows="2" required></textarea>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Question Type *</label>
+                        <select class="form-select" name="questionType" onchange="changeQuestionTypeNew(this)" required>
+                            <option value="multiple_choice">Multiple Choice</option>
+                            <option value="true_false">True/False</option>
+                            <option value="short_answer">Short Answer</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Points</label>
+                        <input type="number" class="form-control" name="points" min="1" value="1">
+                    </div>
+                </div>
+
+                <div class="options-section">
+                    <label class="form-label">Options *</label>
+                    <div class="options-container">
+                        <div class="option-row">
+                            <input type="radio" name="question_${questionCounter}_correct" name="isCorrect" value="q${questionCounter}_o0" checked>
+                            <input type="text" class="form-control" name="optionText" placeholder="Option 1" required>
+                            <button type="button" class="delete-option-btn" onclick="deleteOptionNew(this)" disabled>
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="option-row">
+                            <input type="radio" name="question_${questionCounter}_correct" name="isCorrect" value="q${questionCounter}_o1">
+                            <input type="text" class="form-control" name="optionText" placeholder="Option 2" required>
+                            <button type="button" class="delete-option-btn" onclick="deleteOptionNew(this)" disabled>
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="add-option-btn mt-2" onclick="addOptionNew(this)">
+                        <i class="fas fa-plus"></i> Add Option
+                    </button>
+                </div>
+
+                <div class="true-false-section" style="display:none;">
+                    <label class="form-label">Correct Answer *</label>
+                    <select class="form-select" name="correctAnswer">
+                        <option value="True">True</option>
+                        <option value="False">False</option>
+                    </select>
+                </div>
+
+                <div class="short-answer-section" style="display:none;">
+                    <label class="form-label">Correct Answer *</label>
+                    <input type="text" class="form-control" name="correctAnswer" placeholder="Enter correct answer">
+                </div>
+            </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', questionHtml);
+        updateQuestionNumbers();
+    }
+
+    function deleteExistingQuestion(index) {
+        if (confirm('Are you sure you want to delete this question?')) {
+            const questions = document.querySelectorAll('.question-card');
+            questions[index].remove();
+            updateQuestionNumbers();
+        }
+    }
+
+    function deleteNewQuestion(button) {
+        if (confirm('Are you sure you want to delete this question?')) {
+            button.closest('.question-card').remove();
+            updateQuestionNumbers();
+        }
+    }
+
+    function updateQuestionNumbers() {
+        const questions = document.querySelectorAll('.question-card');
+        questions.forEach((question, index) => {
+            question.querySelector('.question-number').textContent = 'Question ' + (index + 1);
+        });
+        questionCounter = questions.length;
+    }
+
+    function changeQuestionTypeExisting(index) {
+        const questions = document.querySelectorAll('.question-card');
+        const question = questions[index];
+        const select = question.querySelector('select[name="questionType"]');
+        const type = select.value;
+
+        question.querySelector('.options-section').style.display =
+            (type === 'multiple_choice') ? '' : 'none';
+        question.querySelector('.true-false-section').style.display =
+            (type === 'true_false') ? '' : 'none';
+        question.querySelector('.short-answer-section').style.display =
+            (type === 'short_answer') ? '' : 'none';
+    }
+
+    function changeQuestionTypeNew(select) {
+        const question = select.closest('.question-card');
+        const type = select.value;
+
+        question.querySelector('.options-section').style.display =
+            (type === 'multiple_choice') ? '' : 'none';
+        question.querySelector('.true-false-section').style.display =
+            (type === 'true_false') ? '' : 'none';
+        question.querySelector('.short-answer-section').style.display =
+            (type === 'short_answer') ? '' : 'none';
+    }
+
+    function addOptionExisting(questionIndex) {
+        const questions = document.querySelectorAll('.question-card');
+        const optionsContainer = questions[questionIndex].querySelector('.options-container');
+        const optionCount = optionsContainer.querySelectorAll('.option-row').length;
+
+        const optionHtml = `
+            <div class="option-row">
+                <input type="radio" name="question_${questionIndex}_correct" name="isCorrect" value="q${questionIndex}_o${optionCount}">
+                <input type="text" class="form-control" name="optionText" placeholder="Option ${optionCount + 1}" required>
+                <button type="button" class="delete-option-btn" onclick="deleteOptionExisting(this, ${questionIndex})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+
+        optionsContainer.insertAdjacentHTML('beforeend', optionHtml);
+        updateDeleteButtons(questions[questionIndex]);
+    }
+
+    function addOptionNew(button) {
+        const question = button.closest('.question-card');
+        const optionsContainer = question.querySelector('.options-container');
+        const optionCount = optionsContainer.querySelectorAll('.option-row').length;
+        const questionNum = Array.from(document.querySelectorAll('.question-card')).indexOf(question);
+
+        const optionHtml = `
+            <div class="option-row">
+                <input type="radio" name="question_${questionNum}_correct" name="isCorrect" value="q${questionNum}_o${optionCount}">
+                <input type="text" class="form-control" name="optionText" placeholder="Option ${optionCount + 1}" required>
+                <button type="button" class="delete-option-btn" onclick="deleteOptionNew(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+
+        optionsContainer.insertAdjacentHTML('beforeend', optionHtml);
+        updateDeleteButtons(question);
+    }
+
+    function deleteOptionExisting(button, questionIndex) {
+        const question = button.closest('.question-card');
+        const optionsContainer = question.querySelector('.options-container');
+        const optionCount = optionsContainer.querySelectorAll('.option-row').length;
+
+        if (optionCount > 2) {
+            button.closest('.option-row').remove();
+            updateDeleteButtons(question);
+        }
+    }
+
+    function deleteOptionNew(button) {
+        const question = button.closest('.question-card');
+        const optionsContainer = question.querySelector('.options-container');
+        const optionCount = optionsContainer.querySelectorAll('.option-row').length;
+
+        if (optionCount > 2) {
+            button.closest('.option-row').remove();
+            updateDeleteButtons(question);
+        }
+    }
+
+    function updateDeleteButtons(question) {
+        const options = question.querySelectorAll('.option-row');
+        const deleteButtons = question.querySelectorAll('.delete-option-btn');
+
+        deleteButtons.forEach(btn => {
+            btn.disabled = (options.length <= 2);
+        });
+    }
+
+    function confirmDeleteQuiz() {
+        if (confirm('Are you sure you want to delete this entire quiz? This action cannot be undone!')) {
+            document.getElementById('deleteQuizForm').submit();
+        }
+    }
+</script>
+</body>
+</html>

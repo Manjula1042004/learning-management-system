@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Take Quiz: ' + ${quiz.title}">Take Quiz - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .question-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #3b82f6;
+        }
+        .option-label {
+            display: block;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option-label:hover {
+            background: #f3f4f6;
+            border-color: #3b82f6;
+        }
+        input[type="radio"]:checked + .option-label {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+        input[type="radio"] {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- Navigation -->
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <a th:href="@{/student}" class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">LearnPro</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-6">
+                <span class="text-gray-600">Welcome, <span th:text="${user.username}"></span></span>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Timer -->
+    <div class="timer" id="timer">
+        <i class="fas fa-clock mr-2"></i>
+        <span id="time-remaining">00:00</span>
+    </div>
+
+    <!-- Quiz Header -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900" th:text="${quiz.title}"></h1>
+                <p class="text-gray-600 mt-2">Course: <span th:text="${quiz.course.title}"></span></p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-500">Attempt #<span th:text="${attempt.attemptNumber}"></span></p>
+                <p class="text-sm text-gray-500">Max Attempts: <span th:text="${quiz.maxAttempts}"></span></p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-question-circle text-blue-600 text-xl mr-3"></i>
+                    <div>
+                        <p class="text-sm text-gray-600">Questions</p>
+                        <p class="font-semibold">
+                            <span th:text="${quiz.questions != null ? quiz.questions.size() : 0}"></span>/<span th:text="${quiz.totalQuestions}"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-trophy text-green-600 text-xl mr-3"></i>
+                    <div>
+                        <p class="text-sm text-gray-600">Passing Score</p>
+                        <p class="font-semibold" th:text="${quiz.passingScore} + '%'"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-purple-50 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-clock text-purple-600 text-xl mr-3"></i>
+                    <div>
+                        <p class="text-sm text-gray-600">Duration</p>
+                        <p class="font-semibold" th:text="${quiz.duration} + ' minutes'"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-gray-700 mb-4" th:text="${quiz.description}"></p>
+
+        <!-- Quiz Instructions -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Instructions</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>You have <span th:text="${quiz.duration}"></span> minutes to complete the quiz</li>
+                            <li>Answer all questions before submitting</li>
+                            <li>Once submitted, you cannot change your answers</li>
+                            <li>You need at least <span th:text="${quiz.passingScore}"></span>% to pass</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Form -->
+    <form th:action="@{/quiz/submit/{attemptId}(attemptId=${attempt.id})}" method="post" id="quizForm">
+        <!-- Questions -->
+        <div th:if="${quiz.questions != null and !quiz.questions.empty}" class="space-y-6">
+            <div th:each="question, iter : ${quiz.questions}" class="question-card">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        Question <span th:text="${iter.count}"></span>
+                        <span class="text-sm text-gray-500 ml-2">
+                            (<span th:text="${question.points}"></span> point<span th:if="${question.points > 1}">s</span>)
+                        </span>
+                    </h3>
+                </div>
+
+                <p class="text-gray-700 mb-6 text-lg" th:text="${question.questionText}"></p>
+
+                <!-- Multiple Choice Questions -->
+                <div th:if="${question.questionType == 'multiple_choice'}">
+                    <div class="space-y-3">
+                        <div th:each="option, optIter : ${question.options}">
+                            <input type="radio"
+                                   th:id="'q_' + ${question.id} + '_opt_' + ${option.id}"
+                                   th:name="__${'question_' + question.id}__"
+                                   th:value="${option.id}">
+                            <label th:for="'q_' + ${question.id} + '_opt_' + ${option.id}"
+                                   class="option-label flex items-center">
+                                <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                    <span th:text="${optIter.index + 1}"></span>
+                                </span>
+                                <span th:text="${option.optionText}"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- True/False Questions -->
+                <div th:if="${question.questionType == 'true_false'}">
+                    <div class="space-y-3">
+                        <div>
+                            <input type="radio"
+                                   th:id="'q_' + ${question.id} + '_true'"
+                                   th:name="__${'question_' + question.id}__"
+                                   value="true">
+                            <label th:for="'q_' + ${question.id} + '_true'" class="option-label">
+                                <i class="fas fa-check text-green-600 mr-2"></i>True
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio"
+                                   th:id="'q_' + ${question.id} + '_false'"
+                                   th:name="__${'question_' + question.id}__"
+                                   value="false">
+                            <label th:for="'q_' + ${question.id} + '_false'" class="option-label">
+                                <i class="fas fa-times text-red-600 mr-2"></i>False
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Short Answer Questions -->
+                <div th:if="${question.questionType == 'short_answer'}">
+                    <div class="space-y-3">
+                        <label th:for="'q_' + ${question.id}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Your Answer:
+                        </label>
+                        <textarea th:id="'q_' + ${question.id}"
+                                  th:name="__${'question_' + question.id}__"
+                                  rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Type your answer here..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Questions Message -->
+        <div th:if="${quiz.questions == null or quiz.questions.empty}" class="text-center py-8">
+            <i class="fas fa-question-circle text-gray-400 text-6xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No questions available</h3>
+            <p class="text-gray-600">This quiz doesn't have any questions yet.</p>
+        </div>
+
+        <!-- Submit Button -->
+        <div th:if="${quiz.questions != null and !quiz.questions.empty}" class="mt-8 flex justify-between items-center">
+            <div class="text-sm text-gray-500">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                Time remaining: <span id="time-remaining-text">00:00</span>
+            </div>
+            <button type="submit"
+                    class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-semibold text-lg"
+                    onclick="return confirmSubmit()">
+                <i class="fas fa-paper-plane mr-2"></i>Submit Quiz
+            </button>
+        </div>
+    </form>
+</main>
+
+<!-- Confirmation Modal -->
+<div id="confirmationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-8 max-w-md mx-4">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Submit Quiz?</h3>
+        <p class="text-gray-600 mb-6">Are you sure you want to submit your quiz? You cannot change your answers after submission.</p>
+        <div class="flex justify-end space-x-4">
+            <button type="button" onclick="closeModal()"
+                    class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400">
+                Cancel
+            </button>
+            <button type="button" onclick="submitQuiz()"
+                    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                Yes, Submit
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Timer functionality
+    let totalTime = [[${quiz.duration}]] * 60; // Convert minutes to seconds
+    let timeLeft = totalTime;
+    let timerInterval;
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                alert('Time is up! Submitting quiz...');
+                document.getElementById('quizForm').submit();
+            }
+
+            // Warning when 5 minutes left
+            if (timeLeft === 5 * 60) {
+                showWarning('5 minutes remaining!');
+            }
+
+            // Warning when 1 minute left
+            if (timeLeft === 60) {
+                showWarning('1 minute remaining!');
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        document.getElementById('time-remaining').textContent = timeString;
+        document.getElementById('time-remaining-text').textContent = timeString;
+
+        // Change color when time is running low
+        const timerElement = document.getElementById('timer');
+        if (timeLeft <= 5 * 60) {
+            timerElement.style.background = '#fef3c7'; // Yellow
+            timerElement.style.color = '#92400e';
+        }
+        if (timeLeft <= 60) {
+            timerElement.style.background = '#fee2e2'; // Red
+            timerElement.style.color = '#991b1b';
+        }
+    }
+
+    function showWarning(message) {
+        // Create warning notification
+        const warning = document.createElement('div');
+        warning.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-pulse';
+        warning.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        document.body.appendChild(warning);
+
+        // Remove after 5 seconds
+        setTimeout(() => {
+            warning.remove();
+        }, 5000);
+    }
+
+    // Modal functions
+    function confirmSubmit() {
+        // Check if all questions are answered
+        const unanswered = checkUnansweredQuestions();
+        if (unanswered > 0) {
+            const modal = document.getElementById('confirmationModal');
+            modal.querySelector('p').textContent =
+                `You have ${unanswered} unanswered question${unanswered > 1 ? 's' : ''}. Are you sure you want to submit?`;
+            modal.classList.remove('hidden');
+            return false;
+        }
+
+        // If all answered, show regular confirmation
+        const modal = document.getElementById('confirmationModal');
+        modal.querySelector('p').textContent = 'Are you sure you want to submit your quiz? You cannot change your answers after submission.';
+        modal.classList.remove('hidden');
+        return false;
+    }
+
+    function closeModal() {
+        document.getElementById('confirmationModal').classList.add('hidden');
+    }
+
+    function submitQuiz() {
+        document.getElementById('quizForm').submit();
+    }
+
+    function checkUnansweredQuestions() {
+        let unanswered = 0;
+
+        // Check multiple choice and true/false
+        const questionGroups = document.querySelectorAll('input[type="radio"][name^="question_"]');
+        const answeredQuestions = new Set();
+
+        questionGroups.forEach(input => {
+            if (input.checked) {
+                const questionId = input.name.replace('question_', '');
+                answeredQuestions.add(questionId);
+            }
+        });
+
+        // Check short answer
+        const textAreas = document.querySelectorAll('textarea[name^="question_"]');
+        textAreas.forEach(textarea => {
+            if (textarea.value.trim() === '') {
+                const questionId = textarea.name.replace('question_', '');
+                if (!answeredQuestions.has(questionId)) {
+                    unanswered++;
+                }
+            }
+        });
+
+        // Total questions minus answered
+        const totalQuestions = [[${quiz.questions != null ? quiz.questions.size() : 0}]];
+        unanswered += (totalQuestions - answeredQuestions.size);
+
+        return unanswered;
+    }
+
+    // Auto-save functionality (optional)
+    function autoSave() {
+        const formData = new FormData(document.getElementById('quizForm'));
+        localStorage.setItem('quiz_attempt_' + [[${attempt.id}]], JSON.stringify(Object.fromEntries(formData)));
+        console.log('Progress auto-saved');
+    }
+
+    // Load saved answers if any
+    function loadSavedAnswers() {
+        const savedData = localStorage.getItem('quiz_attempt_' + [[${attempt.id}]]);
+        if (savedData) {
+            const answers = JSON.parse(savedData);
+            Object.keys(answers).forEach(key => {
+                const element = document.querySelector(`[name="${key}"][value="${answers[key]}"]`);
+                if (element) element.checked = true;
+
+                const textarea = document.querySelector(`textarea[name="${key}"]`);
+                if (textarea) textarea.value = answers[key];
+            });
+            console.log('Saved answers loaded');
+        }
+    }
+
+    // Initialize everything when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        startTimer();
+        loadSavedAnswers();
+
+        // Auto-save every 30 seconds
+        setInterval(autoSave, 30000);
+
+        // Warn before leaving page
+        window.addEventListener('beforeunload', function(e) {
+            if (timeLeft > 0) {
+                e.preventDefault();
+                e.returnValue = 'Your quiz progress will be lost if you leave this page. Are you sure?';
+                return e.returnValue;
+            }
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Quiz Result: ' + ${quiz.title}">Quiz Result - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <a th:href="@{/student}" class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">LearnPro</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-6">
+                <span class="text-gray-600">Welcome, <span th:text="${user.username}"></span></span>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Result Header -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="text-center mb-6">
+            <div th:if="${attempt.status == 'passed'}"
+                 class="inline-block p-4 bg-green-100 rounded-full mb-4">
+                <i class="fas fa-trophy text-green-600 text-4xl"></i>
+            </div>
+            <div th:if="${attempt.status == 'failed'}"
+                 class="inline-block p-4 bg-red-100 rounded-full mb-4">
+                <i class="fas fa-times-circle text-red-600 text-4xl"></i>
+            </div>
+
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <span th:if="${attempt.status == 'passed'}">🎉 Congratulations!</span>
+                <span th:if="${attempt.status == 'failed'}">Keep Learning!</span>
+            </h1>
+            <p class="text-gray-600 text-lg">
+                You scored <span class="font-bold" th:text="${attempt.percentage} + '%'"></span>
+                in <span th:text="${quiz.title}"></span>
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-chart-bar text-blue-600 text-xl mr-3"></i>
+                    <div>
+                        <p class="text-sm text-gray-600">Your Score</p>
+                        <p class="text-2xl font-bold" th:text="${attempt.percentage} + '%'"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-flag-checkered text-green-600 text-xl mr-3"></i>
+                    <div>
+                        <p class="text-sm text-gray-600">Passing Score</p>
+                        <p class="text-2xl font-bold" th:text="${quiz.passingScore} + '%'"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-purple-50 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-star text-purple-600 text-xl mr-3"></i>
+                    <div>
+                        <p class="text-sm text-gray-600">Result</p>
+                        <p class="text-2xl font-bold"
+                           th:text="${attempt.status == 'passed' ? 'PASSED' : 'FAILED'}"
+                           th:class="${attempt.status == 'passed' ? 'text-green-600' : 'text-red-600'}">
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-center space-x-4 mb-8">
+        <a th:href="@{/courses/{id}(id=${quiz.course.id})}"
+           class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Course
+        </a>
+        <a th:href="@{/quiz/{id}(id=${quiz.id})}"
+           th:if="${attempt.attemptNumber < quiz.maxAttempts and attempt.status == 'failed'}"
+           class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold">
+            <i class="fas fa-redo mr-2"></i>Try Again
+        </a>
+    </div>
+</main>
+</body>
+</html>

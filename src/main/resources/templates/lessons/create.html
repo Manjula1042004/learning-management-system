@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Lesson - LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hidden-field {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- Navigation -->
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <a th:href="@{/}" class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">LearnPro</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a th:href="@{/courses}" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a th:href="@{/dashboard}" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Create New Lesson</h1>
+        <p class="text-gray-600 mt-2">Add a lesson to: <span th:text="${course.title}" class="font-semibold"></span></p>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+        <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <span th:text="${error}"></span>
+    </div>
+
+    <form th:action="@{/lessons/create/{courseId}(courseId=${course.id})}" method="post"
+          enctype="multipart/form-data" class="bg-white rounded-lg shadow-lg p-6">
+        <div class="grid grid-cols-1 gap-6">
+            <!-- Lesson Title -->
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Lesson Title *</label>
+                <input type="text" id="title" name="title" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Enter lesson title">
+            </div>
+
+            <!-- Lesson Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                <textarea id="description" name="description" rows="4" required
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Describe this lesson"></textarea>
+            </div>
+
+            <!-- Lesson Type -->
+            <div>
+                <label for="type" class="block text-sm font-medium text-gray-700 mb-2">Content Type *</label>
+                <select id="type" name="type" required onchange="toggleContentFields()"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Select Content Type</option>
+                    <option value="VIDEO">Video</option>
+                    <option value="PDF">PDF</option>
+                    <option value="IMAGE">Image</option>
+                    <option value="TEXT">Text</option>
+                    <option value="QUIZ">Quiz</option>
+                </select>
+            </div>
+
+            <!-- ========== VIDEO FIELDS ========== -->
+            <div id="videoFields" class="hidden-field">
+                <div class="border-l-4 border-blue-500 pl-4 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                        <i class="fas fa-video text-blue-500 mr-2"></i>Video Content
+                    </h3>
+                    <p class="text-sm text-gray-600 mb-3">
+                        <i class="fas fa-cloud text-blue-500 mr-1"></i>
+                        Uploaded videos will be stored securely in Cloudinary
+                    </p>
+
+                    <!-- Duration field - ONLY FOR VIDEO -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes) *</label>
+                        <input type="number" id="videoDuration" name="duration" min="1" value="30"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Option 1: File Upload -->
+                    <div class="mb-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="videoSource" value="file" checked onchange="toggleVideoSource()" class="mr-2">
+                            <span class="font-medium text-gray-700">Upload Video File (Recommended)</span>
+                        </label>
+                        <input type="file" id="videoFile" name="videoFile" accept="video/*"
+                               class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-sm text-gray-500 mt-1">Supported: MP4, MOV, AVI, WebM (Max 100MB)</p>
+                    </div>
+
+                    <!-- Option 2: URL Upload -->
+                    <div class="mb-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="videoSource" value="url" onchange="toggleVideoSource()" class="mr-2">
+                            <span class="font-medium text-gray-700">Use Video URL</span>
+                        </label>
+                        <input type="url" id="videoUrl" name="videoUrl"
+                               class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hidden-field"
+                               placeholder="https://example.com/video.mp4 or YouTube/Vimeo URL">
+                        <p class="text-sm text-gray-500 mt-1">Enter direct video URL or YouTube/Vimeo link</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== PDF FIELDS ========== -->
+            <div id="pdfFields" class="hidden-field">
+                <div class="border-l-4 border-red-500 pl-4 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                        <i class="fas fa-file-pdf text-red-500 mr-2"></i>PDF Content
+                    </h3>
+                    <p class="text-sm text-gray-600 mb-3">
+                        <i class="fas fa-cloud text-red-500 mr-1"></i>
+                        Uploaded PDFs will be stored securely in Cloudinary
+                    </p>
+
+                    <!-- Duration for PDF -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Reading Time (minutes) *</label>
+                        <input type="number" id="pdfDuration" name="duration" min="1" value="15"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Option 1: File Upload -->
+                    <div class="mb-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="pdfSource" value="file" checked onchange="togglePdfSource()" class="mr-2">
+                            <span class="font-medium text-gray-700">Upload PDF File (Recommended)</span>
+                        </label>
+                        <input type="file" id="pdfFile" name="pdfFile" accept=".pdf"
+                               class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-sm text-green-600 mt-1">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Will be uploaded to Cloudinary and viewable directly in browser
+                        </p>
+                    </div>
+
+                    <!-- Option 2: URL Upload -->
+                    <div class="mb-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="pdfSource" value="url" onchange="togglePdfSource()" class="mr-2">
+                            <span class="font-medium text-gray-700">Use PDF URL</span>
+                        </label>
+                        <input type="url" id="pdfUrl" name="pdfUrl"
+                               class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hidden-field"
+                               placeholder="https://example.com/document.pdf">
+                        <p class="text-sm text-gray-500 mt-1">
+                            Enter PDF URL (must start with https://)
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== IMAGE FIELDS ========== -->
+            <div id="imageFields" class="hidden-field">
+                <div class="border-l-4 border-green-500 pl-4 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                        <i class="fas fa-image text-green-500 mr-2"></i>Image Content
+                    </h3>
+                    <p class="text-sm text-gray-600 mb-3">
+                        <i class="fas fa-cloud text-green-500 mr-1"></i>
+                        Uploaded images will be stored securely in Cloudinary
+                    </p>
+
+                    <!-- Duration for Image -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Viewing Time (minutes) *</label>
+                        <input type="number" id="imageDuration" name="duration" min="1" value="5"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Option 1: File Upload -->
+                    <div class="mb-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="imageSource" value="file" checked onchange="toggleImageSource()" class="mr-2">
+                            <span class="font-medium text-gray-700">Upload Image File (Recommended)</span>
+                        </label>
+                        <input type="file" id="imageFile" name="imageFile" accept="image/*"
+                               class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-sm text-gray-500 mt-1">Supported: JPG, PNG, GIF, WebP (Max 20MB)</p>
+                    </div>
+
+                    <!-- Option 2: URL Upload -->
+                    <div class="mb-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="imageSource" value="url" onchange="toggleImageSource()" class="mr-2">
+                            <span class="font-medium text-gray-700">Use Image URL</span>
+                        </label>
+                        <input type="url" id="imageUrl" name="imageUrl"
+                               class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hidden-field"
+                               placeholder="https://example.com/image.jpg">
+                        <p class="text-sm text-gray-500 mt-1">
+                            Enter image URL (must start with https://)
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== TEXT FIELDS ========== -->
+            <div id="textFields" class="hidden-field">
+                <div class="border-l-4 border-gray-500 pl-4 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                        <i class="fas fa-file-alt text-gray-500 mr-2"></i>Text Content
+                    </h3>
+
+                    <!-- Duration for Text -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Reading Time (minutes) *</label>
+                        <input type="number" id="textDuration" name="duration" min="1" value="10"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <p class="text-sm text-gray-600 mb-3">
+                        <i class="fas fa-info-circle text-gray-500 mr-1"></i>
+                        For text-based lessons. Just enter your content above.
+                    </p>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <p class="text-gray-700">
+                            ✅ Text lessons require only the description field.<br>
+                            ✅ No files need to be uploaded.<br>
+                            ✅ Students will read the content directly.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== QUIZ FIELDS ========== -->
+            <div id="quizFields" class="hidden-field">
+                <div class="border-l-4 border-purple-500 pl-4 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                        <i class="fas fa-question-circle text-purple-500 mr-2"></i>Quiz Content
+                    </h3>
+
+                    <!-- Duration for Quiz -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Duration (minutes) *</label>
+                        <input type="number" id="quizDuration" name="duration" min="1" value="20"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <p class="text-sm text-gray-600 mb-3">
+                        <i class="fas fa-info-circle text-purple-500 mr-1"></i>
+                        For quiz-based lessons. You can add questions after creating the lesson.
+                    </p>
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <p class="text-gray-700">
+                            ✅ Quiz lessons require only the description field.<br>
+                            ✅ You can add multiple-choice questions after creating the lesson.<br>
+                            ✅ Students will take the quiz directly in the lesson interface.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-4 pt-6">
+                <a th:href="@{/courses/{id}(id=${course.id})}"
+                   class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    Create Lesson
+                </button>
+            </div>
+        </div>
+    </form>
+</main>
+
+<script>
+    // Function to show/hide content fields based on selected type
+    function toggleContentFields() {
+        const lessonType = document.getElementById('type').value;
+
+        // Hide all fields first
+        document.getElementById('videoFields').classList.add('hidden-field');
+        document.getElementById('pdfFields').classList.add('hidden-field');
+        document.getElementById('imageFields').classList.add('hidden-field');
+        document.getElementById('textFields').classList.add('hidden-field');
+        document.getElementById('quizFields').classList.add('hidden-field');
+
+        // Clear all file inputs and duration fields when switching types
+        clearAllInputs();
+
+        // Show the selected type's fields
+        if (lessonType === 'VIDEO') {
+            document.getElementById('videoFields').classList.remove('hidden-field');
+            document.getElementById('videoDuration').required = true;
+            toggleVideoSource(); // Initialize video source
+        } else if (lessonType === 'PDF') {
+            document.getElementById('pdfFields').classList.remove('hidden-field');
+            document.getElementById('pdfDuration').required = true;
+            togglePdfSource(); // Initialize PDF source
+        } else if (lessonType === 'IMAGE') {
+            document.getElementById('imageFields').classList.remove('hidden-field');
+            document.getElementById('imageDuration').required = true;
+            toggleImageSource(); // Initialize image source
+        } else if (lessonType === 'TEXT') {
+            document.getElementById('textFields').classList.remove('hidden-field');
+            document.getElementById('textDuration').required = true;
+        } else if (lessonType === 'QUIZ') {
+            document.getElementById('quizFields').classList.remove('hidden-field');
+            document.getElementById('quizDuration').required = true;
+        }
+    }
+
+    // Function to clear all inputs
+    function clearAllInputs() {
+        // Clear file inputs
+        document.getElementById('videoFile').value = '';
+        document.getElementById('pdfFile').value = '';
+        document.getElementById('imageFile').value = '';
+
+        // Clear URL fields
+        document.getElementById('videoUrl').value = '';
+        document.getElementById('pdfUrl').value = '';
+        document.getElementById('imageUrl').value = '';
+
+        // Remove required from all duration fields
+        document.getElementById('videoDuration').required = false;
+        document.getElementById('pdfDuration').required = false;
+        document.getElementById('imageDuration').required = false;
+        document.getElementById('textDuration').required = false;
+        document.getElementById('quizDuration').required = false;
+    }
+
+    // Video source toggle
+    function toggleVideoSource() {
+        const videoSource = document.querySelector('input[name="videoSource"]:checked');
+        if (!videoSource) return;
+
+        const value = videoSource.value;
+        const videoFileInput = document.getElementById('videoFile');
+        const videoUrlInput = document.getElementById('videoUrl');
+
+        if (value === 'file') {
+            videoFileInput.classList.remove('hidden-field');
+            videoUrlInput.classList.add('hidden-field');
+            videoFileInput.required = true;
+            videoUrlInput.required = false;
+            videoUrlInput.value = ''; // Clear URL when switching to file
+        } else {
+            videoFileInput.classList.add('hidden-field');
+            videoUrlInput.classList.remove('hidden-field');
+            videoFileInput.required = false;
+            videoUrlInput.required = true;
+            videoFileInput.value = ''; // Clear file when switching to URL
+        }
+    }
+
+    // PDF source toggle
+    function togglePdfSource() {
+        const pdfSource = document.querySelector('input[name="pdfSource"]:checked');
+        if (!pdfSource) return;
+
+        const value = pdfSource.value;
+        const pdfFileInput = document.getElementById('pdfFile');
+        const pdfUrlInput = document.getElementById('pdfUrl');
+
+        if (value === 'file') {
+            pdfFileInput.classList.remove('hidden-field');
+            pdfUrlInput.classList.add('hidden-field');
+            pdfFileInput.required = true;
+            pdfUrlInput.required = false;
+            pdfUrlInput.value = '';
+        } else {
+            pdfFileInput.classList.add('hidden-field');
+            pdfUrlInput.classList.remove('hidden-field');
+            pdfFileInput.required = false;
+            pdfUrlInput.required = true;
+            pdfFileInput.value = '';
+        }
+    }
+
+    // Image source toggle
+    function toggleImageSource() {
+        const imageSource = document.querySelector('input[name="imageSource"]:checked');
+        if (!imageSource) return;
+
+        const value = imageSource.value;
+        const imageFileInput = document.getElementById('imageFile');
+        const imageUrlInput = document.getElementById('imageUrl');
+
+        if (value === 'file') {
+            imageFileInput.classList.remove('hidden-field');
+            imageUrlInput.classList.add('hidden-field');
+            imageFileInput.required = true;
+            imageUrlInput.required = false;
+            imageUrlInput.value = '';
+        } else {
+            imageFileInput.classList.add('hidden-field');
+            imageUrlInput.classList.remove('hidden-field');
+            imageFileInput.required = false;
+            imageUrlInput.required = true;
+            imageFileInput.value = '';
+        }
+    }
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const lessonType = document.getElementById('type').value;
+
+        if (!lessonType) {
+            e.preventDefault();
+            alert('Please select a content type.');
+            return false;
+        }
+
+        // Validate based on lesson type
+        if (lessonType === 'VIDEO') {
+            const videoSource = document.querySelector('input[name="videoSource"]:checked').value;
+            const videoFile = document.getElementById('videoFile');
+            const videoUrl = document.getElementById('videoUrl');
+
+            if (videoSource === 'file' && (!videoFile.files || !videoFile.files[0])) {
+                e.preventDefault();
+                alert('Please select a video file for upload.');
+                return false;
+            } else if (videoSource === 'url' && (!videoUrl.value || videoUrl.value.trim() === '')) {
+                e.preventDefault();
+                alert('Please enter a video URL.');
+                return false;
+            }
+        }
+
+        if (lessonType === 'PDF') {
+            const pdfSource = document.querySelector('input[name="pdfSource"]:checked').value;
+            const pdfFile = document.getElementById('pdfFile');
+            const pdfUrl = document.getElementById('pdfUrl');
+
+            if (pdfSource === 'file' && (!pdfFile.files || !pdfFile.files[0])) {
+                e.preventDefault();
+                alert('Please select a PDF file for upload.');
+                return false;
+            } else if (pdfSource === 'url' && (!pdfUrl.value || pdfUrl.value.trim() === '')) {
+                e.preventDefault();
+                alert('Please enter a PDF URL.');
+                return false;
+            }
+        }
+
+        if (lessonType === 'IMAGE') {
+            const imageSource = document.querySelector('input[name="imageSource"]:checked').value;
+            const imageFile = document.getElementById('imageFile');
+            const imageUrl = document.getElementById('imageUrl');
+
+            if (imageSource === 'file' && (!imageFile.files || !imageFile.files[0])) {
+                e.preventDefault();
+                alert('Please select an image file for upload.');
+                return false;
+            } else if (imageSource === 'url' && (!imageUrl.value || imageUrl.value.trim() === '')) {
+                e.preventDefault();
+                alert('Please enter an image URL.');
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default values for radio buttons
+        const videoFileRadio = document.querySelector('input[name="videoSource"][value="file"]');
+        const pdfFileRadio = document.querySelector('input[name="pdfSource"][value="file"]');
+        const imageFileRadio = document.querySelector('input[name="imageSource"][value="file"]');
+
+        if (videoFileRadio) videoFileRadio.checked = true;
+        if (pdfFileRadio) pdfFileRadio.checked = true;
+        if (imageFileRadio) imageFileRadio.checked = true;
+
+        toggleContentFields();
+    });
+</script>
+</body>
+</html>

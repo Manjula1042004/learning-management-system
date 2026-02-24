@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Delete</title>
+</head>
+<body>
+<h1>Test Lesson Delete Functionality</h1>
+
+<!-- Test form 1: Direct POST -->
+<form action="/lessons/delete/1" method="post">
+    <button type="submit">Test Delete Lesson ID 1 (POST)</button>
+</form>
+
+<br>
+
+<!-- Test form 2: With Thymeleaf URL -->
+<form th:action="@{/lessons/delete/1}" method="post">
+    <button type="submit">Test Delete Lesson ID 1 (Thymeleaf)</button>
+</form>
+
+<br>
+
+<!-- Test GET delete (for debugging) -->
+<a href="/lessons/test-delete/1">Test Delete Lesson ID 1 (GET)</a>
+
+<br><br>
+
+<!-- Debug endpoint -->
+<a href="/lessons/debug/1">Debug Lesson 1 Info</a>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Delete</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-8">
+<h1 class="text-3xl font-bold mb-6">Test Course Delete</h1>
+
+<div class="space-y-4">
+    <div class="bg-white p-4 rounded shadow">
+        <h2 class="text-xl font-semibold mb-2">Test Delete Endpoints</h2>
+
+        <div class="space-y-2">
+            <!-- Test the regular delete endpoint -->
+            <form action="/courses/1/delete" method="post" class="mb-4">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded">
+                    Delete Course ID 1 (POST)
+                </button>
+            </form>
+
+            <!-- Test GET endpoint -->
+            <a href="/courses/1/delete-now"
+               class="inline-block bg-blue-600 text-white px-4 py-2 rounded">
+                Delete Course ID 1 (GET - for testing)
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
