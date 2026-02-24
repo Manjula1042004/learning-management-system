@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile with explicit port exposure and debug mode
+# Multi-stage Dockerfile with memory optimization
 FROM maven:3.8.4-openjdk-17-slim AS build
 WORKDIR /app
 
@@ -10,7 +10,7 @@ RUN mvn -B dependency:go-offline
 COPY src src
 RUN mvn -B clean package -DskipTests
 
-# Runtime stage
+# Runtime stage with memory limits
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
@@ -20,11 +20,13 @@ COPY --from=build /app/target/*.jar app.jar
 # Expose the port Render expects
 EXPOSE 10000
 
-# Run with maximum debug logging
-ENTRYPOINT ["java", "-jar", \
+# Run with memory limits to prevent OOM
+ENTRYPOINT ["java", \
+    "-XX:+UseG1GC", \
+    "-XX:+UseStringDeduplication", \
+    "-XX:MaxRAMPercentage=75.0", \
+    "-XX:MinRAMPercentage=50.0", \
+    "-Xss512k", \
     "-Dserver.port=${PORT:-10000}", \
     "-Dserver.address=0.0.0.0", \
-    "-Dlogging.level.root=DEBUG", \
-    "-Dlogging.level.com.lms=DEBUG", \
-    "-Dlogging.level.org.hibernate=DEBUG", \
-    "app.jar"]
+    "-jar", "app.jar"]
